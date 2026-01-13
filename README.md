@@ -6,6 +6,12 @@
   <img src="https://img.shields.io/badge/FIGlet-2.2.5-orange?style=for-the-badge" alt="FIGlet Version">
 </p>
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS">
+  <img src="https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
+</p>
+
 <h1 align="center">
   <br>
   🎨 FIGlet-Go
@@ -22,6 +28,7 @@
   <a href="#compatibility">Compatibility</a> •
   <a href="#building">Building</a> •
   <a href="#testing">Testing</a> •
+  <a href="#roadmap">Roadmap</a> •
   <a href="#license">License</a>
 </p>
 
@@ -42,6 +49,7 @@
 - 🚀 **Pure Go implementation** - Single binary, no dependencies
 - 📦 **Embedded fonts** - All standard FIGlet fonts bundled in the binary
 - 🔄 **100% Compatible** - Passes all FIGlet 2.2.5 compatibility tests
+- 🖥️ **Cross-platform** - Works on Linux, macOS, and Windows
 - 🎨 **20+ Built-in fonts** - Including standard, big, small, slant, banner, and more
 - 📝 **Control files support** - Full support for `.flc` control files
 - 🌐 **Unicode support** - UTF-8, ISO 2022, DBCS, HZ, and Shift-JIS encodings
@@ -304,7 +312,10 @@ The test suite includes:
 ```
 figlet-go/
 ├── figlet.go          # Main FIGlet implementation
+├── terminal_unix.go   # Unix terminal support (Linux/macOS)
+├── terminal_windows.go # Windows terminal support
 ├── chkfont.go         # Font checker implementation
+├── go.mod             # Go module file
 ├── Makefile           # Build system
 ├── fonts/             # Font files (.flf) and control files (.flc)
 │   ├── standard.flf
@@ -322,6 +333,25 @@ figlet-go/
 ├── figlist            # Font listing script
 └── LICENSE
 ```
+
+## 🗺️ Roadmap
+
+Current status and future plans for FIGlet-Go:
+
+### ✅ Completed
+
+- [x] Full FIGlet 2.2.5 compatibility
+- [x] Cross-platform support (Linux, macOS, Windows)
+- [x] Embedded fonts in binary
+- [x] UTF-8 and multi-byte encoding support
+- [x] TOIlet font format support
+- [x] CI/CD with GitHub Actions
+
+### 🚧 Planned
+
+- [ ] **Go Library** - Refactor into a reusable Go package (`import "github.com/lsferreira42/figlet-go/figlet"`) for easy integration into any Go application
+- [ ] **WebAssembly (WASM) Build** - Compile to WASM for browser usage
+- [ ] **JavaScript Library** - Create a JS wrapper around the WASM build for easy web integration (`npm install figlet-go`)
 
 ## 🤝 Contributing
 

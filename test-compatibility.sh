@@ -43,7 +43,7 @@ fi
 if [ ! -x "$FIGLET_GO" ]; then
     echo "ERRO: $FIGLET_GO não encontrado ou não é executável" | tee -a "$LOGFILE"
     echo "Compilando a versão Go..." | tee -a "$LOGFILE"
-    if ! go build -o "$FIGLET_GO" figlet.go; then
+    if ! go build -o "$FIGLET_GO" figlet.go terminal_unix.go; then
         echo "ERRO: Falha ao compilar a versão Go" | tee -a "$LOGFILE"
         exit 1
     fi

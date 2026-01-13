@@ -139,8 +139,10 @@ jobs:
           OUTPUT_NAME=dist/figlet-${{ matrix.goos }}-${{ matrix.goarch }}
           if [ "$GOOS" = "windows" ]; then
             OUTPUT_NAME="${OUTPUT_NAME}.exe"
+            go build -o $OUTPUT_NAME figlet.go terminal_windows.go
+          else
+            go build -o $OUTPUT_NAME figlet.go terminal_unix.go
           fi
-          go build -o $OUTPUT_NAME figlet.go
           echo "Built: $OUTPUT_NAME"
 
       - name: Upload binary

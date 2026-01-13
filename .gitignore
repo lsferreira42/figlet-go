@@ -1,2 +1,5 @@
 figlet
+figlet-go
 *.log
+chkfont-go
+chkfont

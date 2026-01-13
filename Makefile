@@ -3,7 +3,7 @@
 
 BINARY := figlet
 CHKFONT := chkfont-go
-GOSRC := figlet.go
+GOSRC := figlet.go terminal_unix.go
 CHKFONT_SRC := chkfont.go
 FONTDIR := fonts
 GO := go
