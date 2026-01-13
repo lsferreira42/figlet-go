@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build figlet
+        run: make build
+
+      - name: Build chkfont
+        run: make build-chkfont
+
+      - name: Upload figlet binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: figlet-linux-amd64
+          path: figlet
+
+      - name: Upload chkfont binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: chkfont-go-linux-amd64
+          path: chkfont-go
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build figlet
+        run: make build
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: tests.log
+
+  test-chkfont:
+    name: Test chkfont
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build chkfont
+        run: make build-chkfont
+
+      - name: Validate fonts with chkfont
+        run: |
+          echo "Validating all .flf font files..."
+          for font in fonts/*.flf; do
+            echo "Checking: $font"
+            ./chkfont-go "$font" || true
+          done
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run go fmt check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "Go files must be formatted with gofmt. Please run: gofmt -w ."
+            gofmt -d .
+            exit 1
+          fi
+
+  multi-platform:
+    name: Cross-Platform Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build for ${{ matrix.goos }}/${{ matrix.goarch }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          OUTPUT_NAME=figlet
+          if [ "$GOOS" = "windows" ]; then
+            OUTPUT_NAME=figlet.exe
+          fi
+          go build -o $OUTPUT_NAME figlet.go
+          echo "Built: $OUTPUT_NAME for $GOOS/$GOARCH"
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: figlet-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: figlet*
+
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./... || true
