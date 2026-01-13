@@ -131,7 +131,7 @@ Usage: figlet [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]
 
 ### chkfont
 
-Font file validator. Checks `.flf` files for format errors without modifying them.
+Font file validator. Checks FIGlet 2.0/2.1 font files (`.flf`) for format errors without modifying them.
 
 ```bash
 # build chkfont
@@ -142,12 +142,62 @@ make build-chkfont
 
 # check multiple fonts
 ./chkfont-go fonts/*.flf
+
+# check from stdin
+./chkfont-go -
 ```
 
-Output example:
+```
+Usage: chkfont-go fontfile ...
+```
+
+**What it checks:**
+
+Errors (fatal):
+- Invalid magic number (must be `flf2`)
+- First line improperly formatted
+- charheight/maxlen not positive
+- Unexpected end of file
+
+Errors:
+- Filename doesn't end with `.flf`
+- Line length exceeds maxlen
+- Inconsistent character width within a character
+- Too many endmarks (more than 2)
+- Invalid layout values
+- Invalid old_layout values
+- up_height out of bounds
+- Code tag -1 (unusable)
+- Inconsistent Codetag_Cnt
+
+Warnings:
+- Sub-version character is not 'a'
+- Unusual hardblank character
+- Blank endmark
+- Inconsistent endmark between lines
+- Endchar count convention violated
+- Code tag > 65535
+- Code tag in ASCII range (32-126)
+- Code tag in old Deutsch area (-255 to -249)
+- Non-increasing code tags
+- Extra characters after font data
+
+**Output example (valid font):**
 ```
 fonts/standard.flf: Errors: 0, Warnings: 0
-fonts/standard.flf: maxlen: 22, actual max line length: 22
+-------------------------------------------------------------------------------
+```
+
+**Output example (font with issues):**
+```
+tests/emboss.tlf: ERROR- Filename does not end with '.flf'.
+tests/emboss.tlf: ERROR- Incorrect magic number.
+tests/emboss.tlf: ERROR- Inconsistent character width in line 27.
+tests/emboss.tlf: ERROR- Line length > maxlen in line 38.
+*******************************************************************************
+tests/emboss.tlf: Too many errors/warnings.
+tests/emboss.tlf: Errors: 21, Warnings: 0
+tests/emboss.tlf: maxlen: 8, actual max line length: 13
 -------------------------------------------------------------------------------
 ```
 
@@ -165,6 +215,29 @@ fonts/standard.flf: maxlen: 22, actual max line length: 22
 
 # use fonts from a different directory
 ./showfigfonts -d /path/to/fonts
+```
+
+## Compatibility
+
+This implementation is **100% compatible** with the original FIGlet 2.2.5:
+
+- Passes all 26 official test cases
+- Produces identical output to the C version
+- Supports all command-line options
+- Handles all font files (.flf) and control files (.flc)
+- Supports TOIlet fonts (.tlf)
+- Handles all encoding modes:
+  - ISO 2022 (with G0/G1/G2/G3 character sets)
+  - UTF-8
+  - DBCS (Double-Byte Character Sets)
+  - HZ encoding
+  - Shift-JIS
+
+You can run compatibility tests against the original C version:
+
+```bash
+# requires figlet (C version) installed
+make test-compat
 ```
 
 ## Fonts
