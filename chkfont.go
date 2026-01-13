@@ -17,29 +17,29 @@ const (
 var possHardblanks = []byte{'!', '@', '#', '$', '%', '&', '*', 0x7f}
 
 type FontChecker struct {
-	myname          string
-	fontfilename    string
-	fontfile        *os.File
-	hardblank       byte
-	charheight      int
-	upheight        int
-	maxlen          int
-	oldLayout       int
-	spectagcnt      int
-	fileline        string
-	maxlinelength   int
-	currline        int
-	ec              int // error count
-	wc              int // warning count
+	myname             string
+	fontfilename       string
+	fontfile           *os.File
+	hardblank          byte
+	charheight         int
+	upheight           int
+	maxlen             int
+	oldLayout          int
+	spectagcnt         int
+	fileline           string
+	maxlinelength      int
+	currline           int
+	ec                 int // error count
+	wc                 int // warning count
 	inconEndmarkWarn   bool
 	endmarkCountWarn   bool
 	nonincrWarn        bool
 	bigCodetagWarn     bool
 	deutschCodetagWarn bool
 	asciiCodetagWarn   bool
-	codetagcnt      int
-	gone            bool
-	scanner         *bufio.Scanner
+	codetagcnt         int
+	gone               bool
+	scanner            *bufio.Scanner
 }
 
 func newFontChecker(myname string) *FontChecker {
