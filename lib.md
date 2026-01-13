@@ -113,7 +113,7 @@ result, err := figlet.Render("Go!", figlet.WithFont("slant"))
 
 #### Available Fonts
 
-The library includes 18 embedded fonts:
+The library includes **146 embedded fonts** from the [FIGlet font database](http://www.figlet.org/fontdb.cgi). Popular fonts include:
 
 | Font | Description |
 |------|-------------|
@@ -728,7 +728,7 @@ func main() {
 
 2. **Check for errors** - Always check the error return from `Render` and `RenderWithFont`.
 
-3. **Use embedded fonts** - The library includes 18 fonts. Using external fonts requires setting `Fontdirname`.
+3. **Use embedded fonts** - The library includes 146 fonts from figlet.org. Using external fonts requires setting `Fontdirname`.
 
 4. **Consider output width** - FIGlet text can be wide. Set `Outputwidth` appropriately for your use case.
 

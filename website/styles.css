@@ -141,9 +141,73 @@ header h1 {
     margin-top: 0.25rem;
 }
 
+.playground-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--accent-primary);
+    color: var(--bg-deep) !important;
+    -webkit-text-fill-color: var(--bg-deep) !important;
+    font-size: 0.45em;
+    font-weight: 700;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+
+.subtitle a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.subtitle a:hover {
+    text-decoration: underline;
+}
+
+.header-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.github-link:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.github-link svg {
+    opacity: 0.9;
+}
+
 .version {
     display: inline-block;
-    margin-top: 1rem;
     padding: 0.35rem 0.85rem;
     background: var(--bg-elevated);
     border: 1px solid var(--border-subtle);
@@ -424,15 +488,18 @@ main {
 }
 
 .font-card-preview {
-    padding: 0.75rem;
+    padding: 1rem;
     background: var(--output-bg);
     overflow: hidden;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
 }
 
 .font-card-preview pre {
     font-family: var(--font-mono);
-    font-size: 0.35rem;
-    line-height: 1.1;
+    font-size: 0.65rem;
+    line-height: 1.2;
     color: var(--output-text);
     white-space: pre;
     margin: 0;

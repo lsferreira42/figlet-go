@@ -91,26 +91,11 @@ console.log(result.result);
 
 ## Available Fonts
 
-The package includes 18 built-in fonts:
+The package includes **146 built-in fonts** from the [FIGlet font database](http://www.figlet.org/fontdb.cgi):
 
-- `standard` (default)
-- `banner`
-- `big`
-- `block`
-- `bubble`
-- `digital`
-- `ivrit`
-- `lean`
-- `mini`
-- `mnemonic`
-- `script`
-- `shadow`
-- `slant`
-- `small`
-- `smscript`
-- `smshadow`
-- `smslant`
-- `term`
+Popular fonts: `standard`, `banner`, `big`, `block`, `slant`, `shadow`, `script`, `small`, `doom`, `graffiti`, `starwars`, `larry3d`, `colossal`, `gothic`, `epic`, `poison`, `roman`, `rounded`, `speed`, `stellar`, and many more!
+
+Use `listFonts()` to see all available fonts.
 
 ## Browser Usage
 
@@ -176,7 +161,7 @@ console.log(result.result);
 
 This package uses WebAssembly compiled from Go, providing:
 - **Fast rendering**: Native-speed text generation
-- **Small size**: Embedded fonts, no external dependencies
+- **146 fonts**: All fonts from figlet.org embedded
 - **Consistent output**: Same results across all platforms
 
 ## Links

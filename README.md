@@ -270,7 +270,7 @@ func main() {
 - **Simple API**: `Render()` and `RenderWithFont()` for quick usage
 - **Functional Options**: Configure with `WithFont()`, `WithWidth()`, `WithJustification()`, etc.
 - **Full Control**: Use `Config` struct directly for advanced usage
-- **18 Embedded Fonts**: All fonts are embedded, no external files needed
+- **146 Embedded Fonts**: All fonts from [figlet.org](http://www.figlet.org/fontdb.cgi) are embedded
 - **Font Discovery**: `ListFonts()` returns all available fonts
 
 📖 **[Full Library Documentation →](lib.md)**
@@ -349,7 +349,11 @@ make test-compat
 
 ## Fonts
 
-18 fonts are embedded in the binary: `standard`, `banner`, `big`, `block`, `bubble`, `digital`, `ivrit`, `lean`, `mini`, `mnemonic`, `script`, `shadow`, `slant`, `small`, `smscript`, `smshadow`, `smslant`, `term`.
+**146 fonts** are embedded in the binary, downloaded from the [FIGlet font database](http://www.figlet.org/fontdb.cgi). Popular fonts include:
+
+`standard`, `banner`, `big`, `block`, `slant`, `shadow`, `script`, `small`, `doom`, `graffiti`, `starwars`, `larry3d`, `colossal`, `gothic`, `epic`, `poison`, `roman`, `rounded`, `speed`, `stellar`, and many more!
+
+Run `figlist` to see all available fonts, or use `figlet.ListFonts()` in Go.
 
 There are also control files (`.flc`) for different encodings: UTF-8, ISO 646 variants, ISO 8859, JIS, KOI8-R, etc.
 
@@ -388,7 +392,7 @@ figlet-go/
 │   ├── figlet_test.go     # library tests
 │   ├── terminal_unix.go   # terminal width detection (Linux/macOS)
 │   ├── terminal_windows.go # terminal width detection (Windows)
-│   └── fonts/             # 18 embedded .flf fonts + .flc control files
+│   └── fonts/             # 146 embedded .flf fonts + .flc control files
 │
 ├── wasm/                  # WebAssembly build source
 │   └── main.go            # WASM entry point

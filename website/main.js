@@ -16,7 +16,6 @@ const elements = {
     output: document.getElementById('output'),
     copyBtn: document.getElementById('copy-btn'),
     downloadBtn: document.getElementById('download-btn'),
-    version: document.getElementById('version'),
     fontGallery: document.getElementById('font-gallery'),
     toast: document.getElementById('toast'),
 };
@@ -56,9 +55,6 @@ function waitForFiglet() {
 
 // Called when FIGlet is ready
 function onFigletReady() {
-    // Set version
-    elements.version.textContent = `v${figlet.getVersion()}`;
-    
     // Load fonts
     loadFonts();
     
@@ -93,7 +89,7 @@ function loadFonts() {
 
 // Generate font gallery with previews
 function generateFontGallery() {
-    const previewText = 'Abc';
+    const previewText = 'Hi';
     const fragment = document.createDocumentFragment();
     
     state.fonts.forEach(font => {
@@ -102,7 +98,10 @@ function generateFontGallery() {
         card.dataset.font = font;
         
         const result = figlet.renderWithFont(previewText, font);
-        const preview = result.error ? 'Error loading font' : result.result;
+        let preview = result.error ? 'Error loading font' : result.result;
+        
+        // Trim leading whitespace from each line (for right-to-left fonts like ivrit)
+        preview = preview.split('\n').map(line => line.trimStart()).join('\n');
         
         card.innerHTML = `
             <div class="font-card-header">
@@ -137,7 +136,11 @@ function setupEventListeners() {
     // Width input
     elements.widthInput.addEventListener('change', () => {
         const width = parseInt(elements.widthInput.value) || 80;
-        figlet.setWidth(Math.max(20, Math.min(200, width)));
+        const clampedWidth = Math.max(20, Math.min(200, width));
+        const result = figlet.setWidth(clampedWidth);
+        if (result.error) {
+            showToast(`Width error: ${result.error}`, 'error');
+        }
         render();
     });
     

@@ -10,13 +10,23 @@ import (
 )
 
 var cfg *figlet.Config
+var initError error
 
 func init() {
 	cfg = figlet.New()
+	// Load the default font (standard)
+	initError = cfg.LoadFont()
 }
 
 // render renders text with the current font
 func render(this js.Value, args []js.Value) interface{} {
+	if initError != nil {
+		return map[string]interface{}{
+			"error":  "font not loaded: " + initError.Error(),
+			"result": "",
+		}
+	}
+
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":  "text argument required",
@@ -114,24 +124,48 @@ func getVersion(this js.Value, args []js.Value) interface{} {
 // setWidth sets the output width
 func setWidth(this js.Value, args []js.Value) interface{} {
 	if len(args) < 1 {
-		return false
+		return map[string]interface{}{
+			"error":   "width argument required",
+			"success": false,
+		}
 	}
 	width := args[0].Int()
-	if width > 0 {
-		cfg.Outputwidth = width
-		return true
+	if width < 1 {
+		return map[string]interface{}{
+			"error":   "width must be positive",
+			"success": false,
+		}
 	}
-	return false
+
+	cfg.Outputwidth = width
+	// Reload font to recalculate internal buffers with new width
+	if err := cfg.LoadFont(); err != nil {
+		return map[string]interface{}{
+			"error":   err.Error(),
+			"success": false,
+		}
+	}
+
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
 }
 
 // setJustification sets text justification
 // 0 = left, 1 = center, 2 = right, -1 = auto
 func setJustification(this js.Value, args []js.Value) interface{} {
 	if len(args) < 1 {
-		return false
+		return map[string]interface{}{
+			"error":   "justification argument required",
+			"success": false,
+		}
 	}
 	cfg.Justification = args[0].Int()
-	return true
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
 }
 
 func main() {
