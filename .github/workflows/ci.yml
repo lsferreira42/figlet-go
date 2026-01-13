@@ -102,8 +102,16 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run go vet
-        run: go vet ./...
+      - name: Run go vet on figlet (Linux)
+        run: go vet figlet.go terminal_unix.go
+
+      - name: Run go vet on figlet (Windows)
+        env:
+          GOOS: windows
+        run: go vet figlet.go terminal_windows.go
+
+      - name: Run go vet on chkfont
+        run: go vet chkfont.go
 
       - name: Run go fmt check
         run: |
