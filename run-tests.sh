@@ -6,7 +6,7 @@ export LC_ALL
 TESTDIR=tests
 OUTPUT=`mktemp`
 LOGFILE=tests.log
-CMD=./figlet
+CMD=${FIGLET_BIN:-./figlet-bin}
 FONTDIR="$1"
 
 run_test() {
@@ -48,7 +48,7 @@ $CMD -f small "Test results" | tee -a $LOGFILE
 run_test 001 "showfigfonts output" "./showfigfonts"
 run_test 002 "text rendering in all fonts" \
   "for i in fonts/*.flf; do $cmd -f \$i; done"
-run_test 003 "long text rendering" "cat tests/longtext.txt|./figlet"
+run_test 003 "long text rendering" "cat tests/longtext.txt|$CMD"
 run_test 004 "left-to-right text" "$cmd -L"
 run_test 005 "right-to-left text" "$cmd -R"
 run_test 006 "flush-left justification" "$cmd -l"

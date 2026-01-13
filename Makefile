@@ -1,14 +1,14 @@
 # FIGlet - Go Implementation
 # Makefile for building, running, and testing the Go version
 
-BINARY := figlet
+BINARY := figlet-bin
 CHKFONT := chkfont-go
-GOSRC := figlet.go terminal_unix.go
+GOSRC := figlet.go
 CHKFONT_SRC := chkfont.go
 FONTDIR := fonts
 GO := go
 
-.PHONY: all build build-chkfont clean test test-chkfont run install help
+.PHONY: all build build-chkfont clean test test-lib test-chkfont run install help
 
 # Default target
 all: build build-chkfont
@@ -29,13 +29,23 @@ build-chkfont:
 clean:
 	@echo "Cleaning..."
 	rm -f $(BINARY) figlet-go $(CHKFONT)
-	rm -f tests.log compatibility-test.log
+	rm -f tests.log compatibility-test.log lib-tests.log coverage.out
 	@echo "Clean complete."
 
 # Run the test suite
 test: build
 	@echo "Running test suite..."
-	./run-tests.sh $(FONTDIR)
+	FIGLET_BIN=./$(BINARY) ./run-tests.sh $(FONTDIR)
+
+# Run library tests
+test-lib:
+	@echo "Running library test suite..."
+	./run-lib-tests.sh -v
+
+# Run library tests with coverage
+test-lib-cover:
+	@echo "Running library test suite with coverage..."
+	./run-lib-tests.sh -v -c
 
 # Run chkfont test suite
 test-chkfont: build-chkfont
@@ -45,10 +55,10 @@ test-chkfont: build-chkfont
 # Run compatibility tests against C version (requires figlet in PATH)
 test-compat: build
 	@echo "Running compatibility tests..."
-	./test-compatibility.sh TEST
+	FIGLET_BIN=./$(BINARY) ./test-compatibility.sh TEST
 
 # Run all tests
-test-all: test test-chkfont
+test-all: test test-lib test-chkfont
 	@echo "All tests complete."
 
 # Run figlet with example text
@@ -63,7 +73,7 @@ run-text: build
 # Install to /usr/local/bin (requires sudo)
 install: build
 	@echo "Installing figlet to /usr/local/bin..."
-	install -m 755 $(BINARY) /usr/local/bin/$(BINARY)
+	install -m 755 $(BINARY) /usr/local/bin/figlet
 	@echo "Install complete."
 
 # Show help
@@ -71,15 +81,25 @@ help:
 	@echo "FIGlet Go - Build System"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all           - Build figlet and chkfont (default)"
-	@echo "  build         - Build the figlet binary"
-	@echo "  build-chkfont - Build the chkfont binary"
-	@echo "  clean         - Remove build artifacts"
-	@echo "  test          - Run the figlet test suite"
-	@echo "  test-chkfont  - Run the chkfont test suite"
-	@echo "  test-all      - Run all test suites"
-	@echo "  test-compat   - Run compatibility tests (requires C figlet in PATH)"
-	@echo "  run           - Build and run with 'Hello World'"
-	@echo "  run-text      - Run with custom text (TEXT=\"message\")"
-	@echo "  install       - Install to /usr/local/bin (requires sudo)"
-	@echo "  help          - Show this help message"
+	@echo "  all            - Build figlet and chkfont (default)"
+	@echo "  build          - Build the figlet binary"
+	@echo "  build-chkfont  - Build the chkfont binary"
+	@echo "  clean          - Remove build artifacts"
+	@echo "  test           - Run the figlet test suite"
+	@echo "  test-lib       - Run the library test suite"
+	@echo "  test-lib-cover - Run library tests with coverage"
+	@echo "  test-chkfont   - Run the chkfont test suite"
+	@echo "  test-all       - Run all test suites"
+	@echo "  test-compat    - Run compatibility tests (requires C figlet in PATH)"
+	@echo "  run            - Build and run with 'Hello World'"
+	@echo "  run-text       - Run with custom text (TEXT=\"message\")"
+	@echo "  install        - Install to /usr/local/bin (requires sudo)"
+	@echo "  help           - Show this help message"
+	@echo ""
+	@echo "Library Usage:"
+	@echo "  The figlet package can be imported as a library:"
+	@echo "    import \"github.com/lsferreira42/figlet-go/figlet\""
+	@echo ""
+	@echo "  Example:"
+	@echo "    result, err := figlet.Render(\"Hello\")"
+	@echo "    result, err := figlet.RenderWithFont(\"Hello\", \"slant\")"

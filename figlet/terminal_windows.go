@@ -1,6 +1,6 @@
 //go:build windows
 
-package main
+package figlet
 
 import (
 	"os"
@@ -33,7 +33,8 @@ type consoleScreenBufferInfo struct {
 	MaximumWindowSize coord
 }
 
-func get_columns() int {
+// GetColumns returns the terminal width
+func GetColumns() int {
 	handle, err := syscall.GetStdHandle(syscall.STD_OUTPUT_HANDLE)
 	if err != nil {
 		return -1

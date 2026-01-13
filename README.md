@@ -30,7 +30,7 @@ This is a **100% compatible** implementation - it passes all the original FIGlet
 I wanted a FIGlet that:
 - Compiles to a single binary with all fonts embedded
 - Works the same way on any platform
-- Can eventually be used as a Go library
+- Can be used as a Go library in other projects ✓
 
 ## Installation
 
@@ -217,6 +217,64 @@ tests/emboss.tlf: maxlen: 8, actual max line length: 13
 ./showfigfonts -d /path/to/fonts
 ```
 
+## Using as a Library
+
+FIGlet-Go can be used as a library in your Go projects. See the **[complete library documentation](lib.md)** for a full tutorial and API reference.
+
+### Quick Start
+
+```bash
+go get github.com/lsferreira42/figlet-go/figlet
+```
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    // Simple usage
+    result, err := figlet.Render("Hello!")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Print(result)
+
+    // With a specific font
+    result, err = figlet.RenderWithFont("Go!", "slant")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Print(result)
+
+    // With options
+    result, err = figlet.Render("Centered",
+        figlet.WithFont("big"),
+        figlet.WithWidth(60),
+        figlet.WithJustification(1), // center
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Print(result)
+}
+```
+
+### Library Features
+
+- **Simple API**: `Render()` and `RenderWithFont()` for quick usage
+- **Functional Options**: Configure with `WithFont()`, `WithWidth()`, `WithJustification()`, etc.
+- **Full Control**: Use `Config` struct directly for advanced usage
+- **18 Embedded Fonts**: All fonts are embedded, no external files needed
+- **Font Discovery**: `ListFonts()` returns all available fonts
+
+📖 **[Full Library Documentation →](lib.md)**
+
 ## Compatibility
 
 This implementation is **100% compatible** with the original FIGlet 2.2.5:
@@ -269,13 +327,22 @@ Requires Go 1.21+.
 
 ```
 figlet-go/
-├── figlet.go              # main FIGlet implementation
-├── terminal_unix.go       # terminal width detection (Linux/macOS)
-├── terminal_windows.go    # terminal width detection (Windows)
+├── figlet.go              # main executable entry point
 ├── chkfont.go             # font file validator
 ├── go.mod                 # Go module
 ├── Makefile               # build commands
 ├── LICENSE                # BSD 3-Clause
+├── lib.md                 # library documentation
+│
+├── figlet/                # FIGlet library package
+│   ├── figlet.go          # core FIGlet implementation
+│   ├── figlet_test.go     # library tests
+│   ├── terminal_unix.go   # terminal width detection (Linux/macOS)
+│   ├── terminal_windows.go # terminal width detection (Windows)
+│   └── fonts/             # 18 embedded .flf fonts + .flc control files
+│
+├── example/               # library usage examples
+│   └── main.go
 │
 ├── figlet.6               # man page for figlet
 ├── chkfont.6              # man page for chkfont
@@ -284,9 +351,10 @@ figlet-go/
 ├── figlist                # lists available fonts (shell script)
 ├── showfigfonts           # shows samples of all fonts (shell script)
 ├── run-tests.sh           # main test runner
+├── run-lib-tests.sh       # library test runner
 ├── run-chkfont-tests.sh   # chkfont test runner
 ├── test-compatibility.sh  # tests against C version
-├── fonts/                 # 18 .flf fonts + strconv .flc control files
+├── fonts/                 # fonts for CLI (also embedded in library)
 └── tests/                 # 26 test cases + input files
 ```
 
@@ -299,9 +367,9 @@ Done:
 - [x] All encoding modes (UTF-8, ISO 2022, DBCS, HZ, Shift-JIS)
 - [x] TOIlet font support (.tlf)
 - [x] CI/CD
+- [x] **Go library for use in other projects** ([documentation](lib.md))
 
 Next:
-- [ ] Refactor as a Go library for use in other projects
 - [ ] WASM build for browser usage
 - [ ] JavaScript/npm package
 - [ ] Color support (ANSI and TrueColor)
@@ -317,5 +385,6 @@ Original FIGlet by Glenn Chappell, Ian Chai, John Cowan, Christiaan Keet and Cla
 
 ## Links
 
+- [Library Documentation](lib.md) - Complete API reference and tutorial
 - [FIGlet Official](http://www.figlet.org/)
 - [FIGlet Font Database](http://www.figlet.org/fontdb.cgi)
