@@ -352,28 +352,12 @@ Current status and future plans for FIGlet-Go:
 - [ ] **Go Library** - Refactor into a reusable Go package (`import "github.com/lsferreira42/figlet-go/figlet"`) for easy integration into any Go application
 - [ ] **WebAssembly (WASM) Build** - Compile to WASM for browser usage
 - [ ] **JavaScript Library** - Create a JS wrapper around the WASM build for easy web integration (`npm install figlet-go`)
+- [ ] **Color Support** - Add ANSI colors and TrueColor (24-bit RGB) support for colored ASCII art banners
+- [ ] **Output Parsers** - Multiple output formats:
+  - [ ] Terminal parser (direct output with ANSI escape codes)
+  - [ ] HTML parser (generates `<code>` blocks with inline styles)
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📜 License
-
-This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
-
-```
-Copyright (C) 1991, 1993, 1994 Glenn Chappell and Ian Chai
-Copyright (C) 1996-2001 John Cowan
-Copyright (C) 2002 Christiaan Keet
-Copyright (C) 2011 Claudio Matsuoka
-All rights reserved.
-```
+> 💡 *Color and parser features inspired by [figlet4go](https://github.com/mbndr/figlet4go)*
 
 ## 🙏 Acknowledgments
 
@@ -388,7 +372,3 @@ All rights reserved.
 - [FIGfont Documentation](http://www.jave.de/figlet/figfont.html)
 
 ---
-
-<p align="center">
-  Made with ❤️ in Go
-</p>
