@@ -259,7 +259,7 @@ func TestConfigMultipleRenders(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadFont failed: %v", err)
 	}
-	
+
 	texts := []string{"A", "B", "Hello", "World"}
 	for _, text := range texts {
 		result := cfg.RenderString(text)

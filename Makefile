@@ -8,22 +8,16 @@ CHKFONT_SRC := chkfont.go
 FONTDIR := fonts
 GO := go
 
-.PHONY: all build build-chkfont build-cmd clean test test-lib test-chkfont run install help
+.PHONY: all build build-chkfont clean test test-lib test-chkfont run install help
 
 # Default target
 all: build build-chkfont
 
-# Build the figlet binary (from root)
+# Build the figlet binary
 build:
 	@echo "Building figlet..."
 	$(GO) build -o $(BINARY) $(GOSRC)
 	@echo "Build complete: $(BINARY)"
-
-# Build the cmd/figlet binary
-build-cmd:
-	@echo "Building cmd/figlet..."
-	$(GO) build -o cmd/figlet/figlet-bin ./cmd/figlet/
-	@echo "Build complete: cmd/figlet/figlet-bin"
 
 # Build the chkfont binary
 build-chkfont:
@@ -35,7 +29,6 @@ build-chkfont:
 clean:
 	@echo "Cleaning..."
 	rm -f $(BINARY) figlet-go $(CHKFONT)
-	rm -f cmd/figlet/figlet-bin
 	rm -f tests.log compatibility-test.log lib-tests.log coverage.out
 	@echo "Clean complete."
 
@@ -90,7 +83,6 @@ help:
 	@echo "Targets:"
 	@echo "  all            - Build figlet and chkfont (default)"
 	@echo "  build          - Build the figlet binary"
-	@echo "  build-cmd      - Build the cmd/figlet binary"
 	@echo "  build-chkfont  - Build the chkfont binary"
 	@echo "  clean          - Remove build artifacts"
 	@echo "  test           - Run the figlet test suite"

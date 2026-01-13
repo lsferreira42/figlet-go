@@ -336,12 +336,10 @@ figlet-go/
 │
 ├── figlet/                # FIGlet library package
 │   ├── figlet.go          # core FIGlet implementation
+│   ├── figlet_test.go     # library tests
 │   ├── terminal_unix.go   # terminal width detection (Linux/macOS)
 │   ├── terminal_windows.go # terminal width detection (Windows)
 │   └── fonts/             # 18 embedded .flf fonts + .flc control files
-│
-├── cmd/figlet/            # alternative executable location
-│   └── main.go
 │
 ├── example/               # library usage examples
 │   └── main.go
@@ -353,6 +351,7 @@ figlet-go/
 ├── figlist                # lists available fonts (shell script)
 ├── showfigfonts           # shows samples of all fonts (shell script)
 ├── run-tests.sh           # main test runner
+├── run-lib-tests.sh       # library test runner
 ├── run-chkfont-tests.sh   # chkfont test runner
 ├── test-compatibility.sh  # tests against C version
 ├── fonts/                 # fonts for CLI (also embedded in library)
