@@ -3,7 +3,6 @@
   <img src="https://img.shields.io/github/actions/workflow/status/lsferreira42/figlet-go/ci.yml?branch=main&style=for-the-badge&logo=github&label=Build" alt="Build Status">
   <img src="https://img.shields.io/badge/License-BSD--3--Clause-green?style=for-the-badge" alt="License">
   <img src="https://goreportcard.com/badge/github.com/lsferreira42/figlet-go?style=for-the-badge" alt="Go Report Card">
-  <img src="https://img.shields.io/badge/FIGlet-2.2.5-orange?style=for-the-badge" alt="FIGlet Version">
 </p>
 
 <p align="center">
@@ -12,27 +11,9 @@
   <img src="https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
 </p>
 
-<h1 align="center">
-  <br>
-  🎨 FIGlet-Go
-  <br>
-</h1>
+<h1 align="center">FIGlet-Go</h1>
 
-<h4 align="center">A complete, 100% compatible rewrite of FIGlet in Go</h4>
-
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#fonts">Fonts</a> •
-  <a href="#compatibility">Compatibility</a> •
-  <a href="#building">Building</a> •
-  <a href="#testing">Testing</a> •
-  <a href="#roadmap">Roadmap</a> •
-  <a href="#license">License</a>
-</p>
-
----
+<p align="center">A complete rewrite of <a href="http://www.figlet.org/">FIGlet</a> in Go</p>
 
 ```
  _____ ___ ____ _      _         ____       
@@ -42,52 +23,76 @@
 |_|   |___\____|_|\___|\__|     \____|\___/ 
 ```
 
-**FIGlet-Go** is a complete rewrite of the classic [FIGlet](http://www.figlet.org/) program in Go. It generates text banners in various typefaces composed of ASCII art characters. This implementation is **100% compatible** with the original C version, passing all compatibility tests.
+This is a **100% compatible** implementation - it passes all the original FIGlet 2.2.5 tests and produces identical output to the C version.
 
-## ✨ Features
+## Why?
 
-- 🚀 **Pure Go implementation** - Single binary, no dependencies
-- 📦 **Embedded fonts** - All standard FIGlet fonts bundled in the binary
-- 🔄 **100% Compatible** - Passes all FIGlet 2.2.5 compatibility tests
-- 🖥️ **Cross-platform** - Works on Linux, macOS, and Windows
-- 🎨 **20+ Built-in fonts** - Including standard, big, small, slant, banner, and more
-- 📝 **Control files support** - Full support for `.flc` control files
-- 🌐 **Unicode support** - UTF-8, ISO 2022, DBCS, HZ, and Shift-JIS encodings
-- ↔️ **Right-to-left text** - Support for RTL languages (Hebrew, etc.)
-- 🔧 **TOIlet compatibility** - Support for TOIlet font format (`.tlf`)
+I wanted a FIGlet that:
+- Compiles to a single binary with all fonts embedded
+- Works the same way on any platform
+- Can eventually be used as a Go library
 
-## 📥 Installation
-
-### From Source
+## Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/lsferreira42/figlet-go.git
 cd figlet-go
-
-# Build
 make build
-
-# Or install directly to /usr/local/bin
-sudo make install
 ```
 
-### Using Go Install
+Or with go install:
 
 ```bash
 go install github.com/lsferreira42/figlet-go@latest
 ```
 
-## 🚀 Usage
+## Usage
 
-### Basic Usage
+### figlet
 
 ```bash
-# Simple text banner
+# pipe text
 echo "Hello World" | ./figlet
 
-# Or provide text as argument
+# pass as argument
 ./figlet "Hello World"
+
+# use a different font
+./figlet -f banner "Hello"
+
+# centered with slant font
+./figlet -c -f slant "Centered"
+
+# right-to-left (Hebrew font)
+./figlet -R -f ivrit "Hello"
+
+# custom width
+./figlet -w 120 "Wide output"
+
+# full width (no smushing)
+./figlet -W "FULL"
+```
+
+Sample output with different fonts:
+
+**standard (default):**
+```
+ _   _      _ _        __        __         _     _ 
+| | | | ___| | | ___   \ \      / /__  _ __| | __| |
+| |_| |/ _ \ | |/ _ \   \ \ /\ / / _ \| '__| |/ _` |
+|  _  |  __/ | | (_) |   \ V  V / (_) | |  | | (_| |
+|_| |_|\___|_|_|\___/     \_/\_/ \___/|_|  |_|\__,_|
+```
+
+**banner:**
+```
+#     # ####### #       #       ####### 
+#     # #       #       #       #     # 
+#     # #       #       #       #     # 
+####### #####   #       #       #     # 
+#     # #       #       #       #     # 
+#     # #       #       #       #     # 
+#     # ####### ####### ####### ####### 
 ```
 
 ### Command Line Options
@@ -103,11 +108,11 @@ Usage: figlet [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]
 | `-f font` | Specify font file |
 | `-d dir` | Specify font directory |
 | `-w width` | Set output width (default: 80) |
-| `-c` | Center justify output |
-| `-l` | Left justify output |
-| `-r` | Right justify output |
-| `-k` | Use kerning (letters touch) |
-| `-o` | Use overlapping (letters overlap) |
+| `-c` | Center justify |
+| `-l` | Left justify |
+| `-r` | Right justify |
+| `-k` | Kerning mode (letters touch) |
+| `-o` | Overlap mode (letters overlap) |
 | `-W` | Full width (no smushing) |
 | `-S` | Force smushing |
 | `-s` | Use font's default smushing |
@@ -122,253 +127,122 @@ Usage: figlet [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]
 | `-N` | Clear control file list |
 | `-t` | Use terminal width |
 | `-v` | Display version info |
-| `-I code` | Display info (0-5) |
+| `-I code` | Display info (0=version, 1=version int, 2=font dir, 3=font name, 4=output width, 5=supported font formats) |
 
-### Examples
+### chkfont
 
-```bash
-# Use a different font
-echo "Hello" | ./figlet -f banner
-
-# Centered output with slant font
-echo "Centered" | ./figlet -c -f slant
-
-# Right-to-left text
-echo "RTL" | ./figlet -R -f ivrit
-
-# Wide output
-echo "Wide Text" | ./figlet -w 120
-
-# Full width (no letter overlapping)
-echo "FULL" | ./figlet -W
-
-# Show version
-./figlet -v
-```
-
-### Sample Output
-
-**Standard font:**
-```
- _   _      _ _        __        __         _     _ 
-| | | | ___| | | ___   \ \      / /__  _ __| | __| |
-| |_| |/ _ \ | |/ _ \   \ \ /\ / / _ \| '__| |/ _` |
-|  _  |  __/ | | (_) |   \ V  V / (_) | |  | | (_| |
-|_| |_|\___|_|_|\___/     \_/\_/ \___/|_|  |_|\__,_|
-```
-
-**Banner font:**
-```
-#     # ####### #       #       ####### 
-#     # #       #       #       #     # 
-#     # #       #       #       #     # 
-####### #####   #       #       #     # 
-#     # #       #       #       #     # 
-#     # #       #       #       #     # 
-#     # ####### ####### ####### ####### 
-```
-
-**Slant font:**
-```
-    __  __     ____         _       __           __    __
-   / / / /__  / / /___     | |     / /___  _____/ /___/ /
-  / /_/ / _ \/ / / __ \    | | /| / / __ \/ ___/ / __  / 
- / __  /  __/ / / /_/ /    | |/ |/ / /_/ / /  / / /_/ /  
-/_/ /_/\___/_/_/\____/     |__/|__/\____/_/  /_/\__,_/   
-```
-
-## 🎨 Fonts
-
-### Included Fonts (.flf)
-
-| Font | Description |
-|------|-------------|
-| `standard` | Default FIGlet font |
-| `banner` | Large banner style |
-| `big` | Large font |
-| `block` | Block letters |
-| `bubble` | Bubble letters |
-| `digital` | Digital display style |
-| `ivrit` | Hebrew (right-to-left) |
-| `lean` | Lean letters |
-| `mini` | Minimal/compact |
-| `mnemonic` | Mnemonic style |
-| `script` | Script/cursive style |
-| `shadow` | Letters with shadow |
-| `slant` | Italic/slanted |
-| `small` | Compact font |
-| `smscript` | Small script |
-| `smshadow` | Small shadow |
-| `smslant` | Small slant |
-| `term` | Terminal-friendly |
-
-### Control Files (.flc)
-
-Control files provide character mapping and encoding support:
-
-- `646-*` - ISO 646 national variants
-- `8859-*` - ISO 8859 character sets
-- `utf8` - UTF-8 encoding
-- `jis0201` - JIS X 0201 (Japanese katakana)
-- `uskata` - US to Katakana mapping
-- `koi8r` - KOI8-R (Russian)
-- And more...
-
-### Using Custom Fonts
+Font file validator. Checks `.flf` files for format errors without modifying them.
 
 ```bash
-# Use a font from a specific directory
-./figlet -d /path/to/fonts -f myfont "Hello"
-
-# Set default font directory via environment variable
-export FIGLET_FONTDIR=/path/to/fonts
-./figlet -f myfont "Hello"
-```
-
-## 🔄 Compatibility
-
-This implementation is **100% compatible** with the original FIGlet 2.2.5. It:
-
-- ✅ Passes all 26 official test cases
-- ✅ Produces identical output to the C version
-- ✅ Supports all command-line options
-- ✅ Handles all font files (.flf) and control files (.flc)
-- ✅ Supports TOIlet fonts (.tlf)
-- ✅ Handles all encoding modes (ISO 2022, UTF-8, DBCS, HZ, Shift-JIS)
-
-### Included Utilities
-
-| Tool | Description |
-|------|-------------|
-| `figlet` | Main text banner generator |
-| `chkfont-go` | Font file validator (checks .flf files for errors) |
-| `figlist` | Lists available fonts and control files |
-| `showfigfonts` | Shows samples of all available fonts |
-
-## 🔨 Building
-
-### Prerequisites
-
-- Go 1.21 or later
-
-### Build Commands
-
-```bash
-# Build everything
-make all
-
-# Build only figlet
-make build
-
-# Build only chkfont
+# build chkfont
 make build-chkfont
 
-# Clean build artifacts
-make clean
+# check a single font
+./chkfont-go fonts/standard.flf
 
-# Show all available targets
-make help
+# check multiple fonts
+./chkfont-go fonts/*.flf
 ```
 
-## 🧪 Testing
+Output example:
+```
+fonts/standard.flf: Errors: 0, Warnings: 0
+fonts/standard.flf: maxlen: 22, actual max line length: 22
+-------------------------------------------------------------------------------
+```
 
-### Run All Tests
+### Helper Scripts
 
 ```bash
-# Run the main test suite
-make test
+# list all available fonts and control files
+./figlist
 
-# Run chkfont tests
-make test-chkfont
+# show a sample of each font
+./showfigfonts
 
-# Run all tests
-make test-all
+# show a specific word in all fonts
+./showfigfonts "Test"
+
+# use fonts from a different directory
+./showfigfonts -d /path/to/fonts
 ```
 
-### Compatibility Testing
+## Fonts
 
-To run compatibility tests against the original C version (requires `figlet` in PATH):
+18 fonts are embedded in the binary: `standard`, `banner`, `big`, `block`, `bubble`, `digital`, `ivrit`, `lean`, `mini`, `mnemonic`, `script`, `shadow`, `slant`, `small`, `smscript`, `smshadow`, `smslant`, `term`.
+
+There are also control files (`.flc`) for different encodings: UTF-8, ISO 646 variants, ISO 8859, JIS, KOI8-R, etc.
+
+You can use fonts from other directories:
 
 ```bash
-make test-compat
+./figlet -d /path/to/fonts -f myfont "Hello"
+# or
+export FIGLET_FONTDIR=/path/to/fonts
 ```
 
-### Test Coverage
+## Building
 
-The test suite includes:
+```bash
+make build          # build figlet
+make build-chkfont  # build the font checker
+make test           # run tests
+make test-compat    # test against C version (needs figlet installed)
+```
 
-- ✅ Text rendering in all fonts
-- ✅ All justification modes (left, center, right)
-- ✅ All smushing modes (kerning, overlap, full width)
-- ✅ Right-to-left text rendering
-- ✅ Long text wrapping
-- ✅ Paragraph mode
-- ✅ Control file processing
-- ✅ TOIlet font support
-- ✅ Various output widths
+Requires Go 1.21+.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 figlet-go/
-├── figlet.go          # Main FIGlet implementation
-├── terminal_unix.go   # Unix terminal support (Linux/macOS)
-├── terminal_windows.go # Windows terminal support
-├── chkfont.go         # Font checker implementation
-├── go.mod             # Go module file
-├── Makefile           # Build system
-├── fonts/             # Font files (.flf) and control files (.flc)
-│   ├── standard.flf
-│   ├── banner.flf
-│   ├── ...
-│   └── utf8.flc
-├── tests/             # Test files and expected results
-│   ├── input.txt
-│   ├── res001.txt
-│   └── ...
-├── run-tests.sh       # Main test runner
-├── run-chkfont-tests.sh
-├── test-compatibility.sh
-├── showfigfonts       # Font showcase script
-├── figlist            # Font listing script
-└── LICENSE
+├── figlet.go              # main FIGlet implementation
+├── terminal_unix.go       # terminal width detection (Linux/macOS)
+├── terminal_windows.go    # terminal width detection (Windows)
+├── chkfont.go             # font file validator
+├── go.mod                 # Go module
+├── Makefile               # build commands
+├── LICENSE                # BSD 3-Clause
+│
+├── figlet.6               # man page for figlet
+├── chkfont.6              # man page for chkfont
+├── showfigfonts.6         # man page for showfigfonts
+│
+├── figlist                # lists available fonts (shell script)
+├── showfigfonts           # shows samples of all fonts (shell script)
+├── run-tests.sh           # main test runner
+├── run-chkfont-tests.sh   # chkfont test runner
+├── test-compatibility.sh  # tests against C version
+├── fonts/                 # 18 .flf fonts + strconv .flc control files
+└── tests/                 # 26 test cases + input files
 ```
 
-## 🗺️ Roadmap
+## Roadmap
 
-Current status and future plans for FIGlet-Go:
-
-### ✅ Completed
-
+Done:
 - [x] Full FIGlet 2.2.5 compatibility
-- [x] Cross-platform support (Linux, macOS, Windows)
-- [x] Embedded fonts in binary
-- [x] UTF-8 and multi-byte encoding support
-- [x] TOIlet font format support
-- [x] CI/CD with GitHub Actions
+- [x] Cross-platform (Linux, macOS, Windows)
+- [x] Embedded fonts
+- [x] All encoding modes (UTF-8, ISO 2022, DBCS, HZ, Shift-JIS)
+- [x] TOIlet font support (.tlf)
+- [x] CI/CD
 
-### 🚧 Planned
+Next:
+- [ ] Refactor as a Go library for use in other projects
+- [ ] WASM build for browser usage
+- [ ] JavaScript/npm package
+- [ ] Color support (ANSI and TrueColor)
+- [ ] Output parsers (terminal with colors, HTML)
 
-- [ ] **Go Library** - Refactor into a reusable Go package (`import "github.com/lsferreira42/figlet-go/figlet"`) for easy integration into any Go application
-- [ ] **WebAssembly (WASM) Build** - Compile to WASM for browser usage
-- [ ] **JavaScript Library** - Create a JS wrapper around the WASM build for easy web integration (`npm install figlet-go`)
-- [ ] **Color Support** - Add ANSI colors and TrueColor (24-bit RGB) support for colored ASCII art banners
-- [ ] **Output Parsers** - Multiple output formats:
-  - [ ] Terminal parser (direct output with ANSI escape codes)
-  - [ ] HTML parser (generates `<code>` blocks with inline styles)
+The color and parser ideas come from [figlet4go](https://github.com/mbndr/figlet4go).
 
-> 💡 *Color and parser features inspired by [figlet4go](https://github.com/mbndr/figlet4go)*
+## License
 
-## 🙏 Acknowledgments
+BSD 3-Clause. See [LICENSE](LICENSE).
 
-- Original [FIGlet](http://www.figlet.org/) authors
-- Glenn Chappell, Ian Chai, John Cowan, Christiaan Keet, and Claudio Matsuoka
-- The FIGlet font designers community
+Original FIGlet by Glenn Chappell, Ian Chai, John Cowan, Christiaan Keet and Claudio Matsuoka.
 
-## 📚 References
+## Links
 
-- [FIGlet Official Website](http://www.figlet.org/)
+- [FIGlet Official](http://www.figlet.org/)
 - [FIGlet Font Database](http://www.figlet.org/fontdb.cgi)
-- [FIGfont Documentation](http://www.jave.de/figlet/figfont.html)
-
----
