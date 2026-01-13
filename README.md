@@ -28,11 +28,11 @@
 ---
 
 ```
- _____ ___ ____ _      _            ____       
-|  ___|_ _/ ___| | ___| |_         / ___| ___  
-| |_   | | |  _| |/ _ \ __|_____  | |  _ / _ \ 
-|  _|  | | |_| | |  __/ ||_____| | |_| | (_) |
-|_|   |___\____|_|\___|\__|       \____|\___/ 
+ _____ ___ ____ _      _         ____       
+|  ___|_ _/ ___| | ___| |_      / ___| ___  
+| |_   | | |  _| |/ _ \ __|____| |  _ / _ \ 
+|  _|  | | |_| | |  __/ ||_____| |_| | (_) |
+|_|   |___\____|_|\___|\__|     \____|\___/ 
 ```
 
 **FIGlet-Go** is a complete rewrite of the classic [FIGlet](http://www.figlet.org/) program in Go. It generates text banners in various typefaces composed of ASCII art characters. This implementation is **100% compatible** with the original C version, passing all compatibility tests.

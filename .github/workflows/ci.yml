@@ -29,17 +29,13 @@ jobs:
       - name: Build chkfont
         run: make build-chkfont
 
-      - name: Upload figlet binary
+      - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: figlet-linux-amd64
-          path: figlet
-
-      - name: Upload chkfont binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: chkfont-go-linux-amd64
-          path: chkfont-go
+          name: binaries-linux-amd64
+          path: |
+            figlet
+            chkfont-go
 
   test:
     name: Test
@@ -139,18 +135,19 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          OUTPUT_NAME=figlet
+          mkdir -p dist
+          OUTPUT_NAME=dist/figlet-${{ matrix.goos }}-${{ matrix.goarch }}
           if [ "$GOOS" = "windows" ]; then
-            OUTPUT_NAME=figlet.exe
+            OUTPUT_NAME="${OUTPUT_NAME}.exe"
           fi
           go build -o $OUTPUT_NAME figlet.go
-          echo "Built: $OUTPUT_NAME for $GOOS/$GOARCH"
+          echo "Built: $OUTPUT_NAME"
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: figlet-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: figlet*
+          path: dist/
 
   security:
     name: Security Check
