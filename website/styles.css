@@ -256,6 +256,9 @@ main {
     border-radius: var(--radius-md);
     color: var(--text-primary);
     transition: all var(--transition-fast);
+    resize: vertical;
+    min-height: 4rem;
+    line-height: 1.4;
 }
 
 #text-input:focus {

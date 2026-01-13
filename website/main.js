@@ -155,14 +155,6 @@ function setupEventListeners() {
     
     // Download button
     elements.downloadBtn.addEventListener('click', downloadText);
-    
-    // Enter key to render
-    elements.textInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            clearTimeout(state.debounceTimer);
-            render();
-        }
-    });
 }
 
 // Select a font
