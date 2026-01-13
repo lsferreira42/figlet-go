@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIGlet-Go Playground</title>
+    <meta name="description" content="Generate ASCII art text with FIGlet-Go. Try different fonts and create stunning text banners.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+    <div class="noise"></div>
+    <div class="gradient-bg"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">▄▀</span>
+                <h1>FIGlet-Go</h1>
+            </div>
+            <p class="tagline">ASCII Art Text Generator</p>
+            <div class="version" id="version">Loading...</div>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="text-input">Your Text</label>
+                    <input 
+                        type="text" 
+                        id="text-input" 
+                        placeholder="Type something amazing..."
+                        value="Hello"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="font-select">Font</label>
+                        <div class="select-wrapper">
+                            <select id="font-select">
+                                <option value="standard">Loading fonts...</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="width-input">Width</label>
+                        <input 
+                            type="number" 
+                            id="width-input" 
+                            value="80" 
+                            min="20" 
+                            max="200"
+                        >
+                    </div>
+
+                    <div class="control-group">
+                        <label for="align-select">Align</label>
+                        <div class="select-wrapper">
+                            <select id="align-select">
+                                <option value="-1">Auto</option>
+                                <option value="0">Left</option>
+                                <option value="1">Center</option>
+                                <option value="2">Right</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <span class="output-label">Output</span>
+                    <div class="output-actions">
+                        <button id="copy-btn" class="action-btn" title="Copy to clipboard">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                        <button id="download-btn" class="action-btn" title="Download as text file">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="output-container">
+                    <pre id="output" class="output">Loading FIGlet-Go...</pre>
+                </div>
+            </div>
+
+            <div class="font-preview-section" id="font-preview-section">
+                <h2>Font Gallery</h2>
+                <p class="gallery-hint">Click any font to use it</p>
+                <div class="font-gallery" id="font-gallery"></div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p>
+                    Built with <a href="https://github.com/lsferreira42/figlet-go" target="_blank" rel="noopener">FIGlet-Go</a>
+                    — A pure Go implementation of FIGlet
+                </p>
+                <p class="footer-links">
+                    <a href="https://github.com/lsferreira42/figlet-go" target="_blank" rel="noopener">GitHub</a>
+                    <span class="separator">•</span>
+                    <a href="https://pkg.go.dev/github.com/lsferreira42/figlet-go/figlet" target="_blank" rel="noopener">Documentation</a>
+                    <span class="separator">•</span>
+                    <a href="https://www.npmjs.com/package/figlet-go" target="_blank" rel="noopener">npm</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="wasm_exec.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

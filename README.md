@@ -275,6 +275,55 @@ func main() {
 
 📖 **[Full Library Documentation →](lib.md)**
 
+## Web/Browser Usage
+
+FIGlet-Go can run in the browser via WebAssembly!
+
+### Online Playground
+
+Try it now at: **[FIGlet-Go Playground](https://lsferreira42.github.io/figlet-go/)**
+
+### npm Package
+
+Install the npm package for Node.js or browser use:
+
+```bash
+npm install figlet-go
+```
+
+```javascript
+const figlet = require('figlet-go');
+
+// Simple rendering
+const art = await figlet.render('Hello!');
+console.log(art);
+
+// With a specific font
+const slantArt = await figlet.renderWithFont('Go!', 'slant');
+console.log(slantArt);
+
+// List available fonts
+const fonts = await figlet.listFonts();
+console.log(fonts);
+```
+
+### Building WebAssembly
+
+```bash
+# Build the WASM module
+make build-wasm
+
+# Build and serve the playground locally
+make serve-website
+# Opens at http://localhost:8080
+
+# Build the npm package
+make npm-build
+
+# Publish to npm (requires npm login)
+make npm-publish
+```
+
 ## Compatibility
 
 This implementation is **100% compatible** with the original FIGlet 2.2.5:
@@ -341,6 +390,21 @@ figlet-go/
 │   ├── terminal_windows.go # terminal width detection (Windows)
 │   └── fonts/             # 18 embedded .flf fonts + .flc control files
 │
+├── wasm/                  # WebAssembly build source
+│   └── main.go            # WASM entry point
+│
+├── website/               # Online playground
+│   ├── index.html         # playground UI
+│   ├── styles.css         # styles
+│   ├── main.js            # JavaScript
+│   ├── wasm_exec.js       # Go WASM support
+│   └── figlet.wasm        # compiled WASM (generated)
+│
+├── npm/                   # npm package
+│   ├── package.json       # npm configuration
+│   ├── src/               # package source
+│   └── README.md          # npm documentation
+│
 ├── example/               # library usage examples
 │   └── main.go
 │
@@ -368,10 +432,10 @@ Done:
 - [x] TOIlet font support (.tlf)
 - [x] CI/CD
 - [x] **Go library for use in other projects** ([documentation](lib.md))
+- [x] **WASM build for browser usage** ([playground](https://lsferreira42.github.io/figlet-go/))
+- [x] **JavaScript/npm package** ([npm](https://www.npmjs.com/package/figlet-go))
 
 Next:
-- [ ] WASM build for browser usage
-- [ ] JavaScript/npm package
 - [ ] Color support (ANSI and TrueColor)
 - [ ] Output parsers (terminal with colors, HTML)
 

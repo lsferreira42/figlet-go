@@ -5,10 +5,14 @@ BINARY := figlet-bin
 CHKFONT := chkfont-go
 GOSRC := figlet.go
 CHKFONT_SRC := chkfont.go
+WASM_SRC := wasm/main.go
+WASM_OUT := website/figlet.wasm
 FONTDIR := fonts
 GO := go
+NPM := npm
 
-.PHONY: all build build-chkfont clean test test-lib test-chkfont run install help
+.PHONY: all build build-chkfont build-wasm clean test test-lib test-chkfont run install help
+.PHONY: website serve-website npm-build npm-publish
 
 # Default target
 all: build build-chkfont
@@ -25,10 +29,41 @@ build-chkfont:
 	$(GO) build -o $(CHKFONT) $(CHKFONT_SRC)
 	@echo "Build complete: $(CHKFONT)"
 
+# Build WebAssembly module
+build-wasm:
+	@echo "Building WebAssembly module..."
+	GOOS=js GOARCH=wasm $(GO) build -o $(WASM_OUT) $(WASM_SRC)
+	@echo "Build complete: $(WASM_OUT)"
+
+# Build everything for website
+website: build-wasm
+	@echo "Website ready in website/ folder"
+	@echo "Run 'make serve-website' to start a local server"
+
+# Serve website locally (requires Python 3)
+serve-website: build-wasm
+	@echo "Starting local server at http://localhost:8080"
+	@echo "Press Ctrl+C to stop"
+	cd website && python3 -m http.server 8080
+
+# Build npm package
+npm-build: build-wasm
+	@echo "Building npm package..."
+	cd npm && $(NPM) run build
+	@echo "npm package built in npm/dist/"
+
+# Publish to npm (requires npm login)
+npm-publish: npm-build
+	@echo "Publishing to npm..."
+	cd npm && $(NPM) publish
+	@echo "Published to npm!"
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
 	rm -f $(BINARY) figlet-go $(CHKFONT)
+	rm -f $(WASM_OUT)
+	rm -rf npm/dist
 	rm -f tests.log compatibility-test.log lib-tests.log coverage.out
 	@echo "Clean complete."
 
@@ -84,6 +119,7 @@ help:
 	@echo "  all            - Build figlet and chkfont (default)"
 	@echo "  build          - Build the figlet binary"
 	@echo "  build-chkfont  - Build the chkfont binary"
+	@echo "  build-wasm     - Build WebAssembly module"
 	@echo "  clean          - Remove build artifacts"
 	@echo "  test           - Run the figlet test suite"
 	@echo "  test-lib       - Run the library test suite"
@@ -95,6 +131,15 @@ help:
 	@echo "  run-text       - Run with custom text (TEXT=\"message\")"
 	@echo "  install        - Install to /usr/local/bin (requires sudo)"
 	@echo "  help           - Show this help message"
+	@echo ""
+	@echo "WebAssembly/Website:"
+	@echo "  build-wasm     - Build the WASM module (website/figlet.wasm)"
+	@echo "  website        - Build WASM and prepare website"
+	@echo "  serve-website  - Start local server at http://localhost:8080"
+	@echo ""
+	@echo "npm Package:"
+	@echo "  npm-build      - Build the npm package"
+	@echo "  npm-publish    - Publish to npm (requires npm login)"
 	@echo ""
 	@echo "Library Usage:"
 	@echo "  The figlet package can be imported as a library:"

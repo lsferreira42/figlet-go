@@ -4,3 +4,6 @@ figlet-go
 chkfont-go
 chkfont
 coverage.out
+website/figlet.wasm
+npm/dist/
+npm/node_modules/
