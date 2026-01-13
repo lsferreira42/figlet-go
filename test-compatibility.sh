@@ -14,7 +14,7 @@ OUTPUT_C=`mktemp`
 OUTPUT_GO=`mktemp`
 LOGFILE=compatibility-test.log
 FIGLET_C=figlet
-FIGLET_GO=./figlet-go
+FIGLET_GO=${FIGLET_BIN:-./figlet-bin}
 FONTDIR="fonts"
 
 # Contadores
@@ -43,7 +43,7 @@ fi
 if [ ! -x "$FIGLET_GO" ]; then
     echo "ERRO: $FIGLET_GO não encontrado ou não é executável" | tee -a "$LOGFILE"
     echo "Compilando a versão Go..." | tee -a "$LOGFILE"
-    if ! go build -o "$FIGLET_GO" figlet.go terminal_unix.go; then
+    if ! go build -o "$FIGLET_GO" figlet.go; then
         echo "ERRO: Falha ao compilar a versão Go" | tee -a "$LOGFILE"
         exit 1
     fi

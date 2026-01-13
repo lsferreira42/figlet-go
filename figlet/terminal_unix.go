@@ -1,6 +1,6 @@
 //go:build !windows
 
-package main
+package figlet
 
 import (
 	"os"
@@ -8,7 +8,8 @@ import (
 	"unsafe"
 )
 
-func get_columns() int {
+// GetColumns returns the terminal width
+func GetColumns() int {
 	fd, err := os.OpenFile("/dev/tty", os.O_WRONLY, 0)
 	if err != nil {
 		return -1

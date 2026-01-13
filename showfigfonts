@@ -11,7 +11,7 @@
 # Usage: showfigfonts [ -d directory ] [ word ]
 
 DIR=`dirname $0`
-FIGLET=$DIR/figlet
+FIGLET=${FIGLET_BIN:-$DIR/figlet-bin}
 
 # Get figlet version
 FIGLETVERSION=`$FIGLET -I1 2>/dev/null`

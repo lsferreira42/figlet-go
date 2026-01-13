@@ -34,7 +34,7 @@ jobs:
         with:
           name: binaries-linux-amd64
           path: |
-            figlet
+            figlet-bin
             chkfont-go
 
   test:
@@ -63,6 +63,31 @@ jobs:
         with:
           name: test-logs
           path: tests.log
+
+  test-lib:
+    name: Test Library
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run library tests
+        run: ./run-lib-tests.sh -v -c
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            lib-tests.log
 
   test-chkfont:
     name: Test chkfont
@@ -102,16 +127,16 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Run go vet on figlet (Linux)
-        run: go vet figlet.go terminal_unix.go
+      - name: Run go vet on figlet
+        run: go vet ./...
 
-      - name: Run go vet on figlet (Windows)
+      - name: Run go vet on library (Linux)
+        run: go vet ./figlet/...
+
+      - name: Run go vet on library (Windows)
         env:
           GOOS: windows
-        run: go vet figlet.go terminal_windows.go
-
-      - name: Run go vet on chkfont
-        run: go vet chkfont.go
+        run: go vet ./figlet/...
 
       - name: Run go fmt check
         run: |
@@ -147,10 +172,8 @@ jobs:
           OUTPUT_NAME=dist/figlet-${{ matrix.goos }}-${{ matrix.goarch }}
           if [ "$GOOS" = "windows" ]; then
             OUTPUT_NAME="${OUTPUT_NAME}.exe"
-            go build -o $OUTPUT_NAME figlet.go terminal_windows.go
-          else
-            go build -o $OUTPUT_NAME figlet.go terminal_unix.go
           fi
+          go build -o $OUTPUT_NAME figlet.go
           echo "Built: $OUTPUT_NAME"
 
       - name: Upload binary

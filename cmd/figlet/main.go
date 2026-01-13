@@ -1,5 +1,3 @@
-// This file provides the main entry point for the figlet executable.
-// The core functionality is in the figlet package (github.com/lsferreira42/figlet-go/figlet).
 package main
 
 import (

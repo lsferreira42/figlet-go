@@ -1,5 +1,7 @@
-figlet
+figlet-bin
 figlet-go
 *.log
 chkfont-go
 chkfont
+cmd/figlet/figlet-bin
+coverage.out
