@@ -1,0 +1,51 @@
+{
+  "name": "figlet-go",
+  "version": "0.0.1",
+  "description": "FIGlet ASCII art text generator - WebAssembly module compiled from Go",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./wasm": "./dist/figlet.wasm"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "figlet",
+    "ascii",
+    "art",
+    "text",
+    "banner",
+    "wasm",
+    "webassembly",
+    "go",
+    "golang"
+  ],
+  "author": "Leandro Ferreira",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lsferreira42/figlet-go.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lsferreira42/figlet-go/issues"
+  },
+  "homepage": "https://github.com/lsferreira42/figlet-go#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0"
+  }
+}
