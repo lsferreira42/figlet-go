@@ -1006,7 +1006,7 @@ func readfont(cfg *Config) error {
 		(cfg.toiletfont && magicnum != TOILETFILEMAGICNUMBER) {
 		return fmt.Errorf("font %s: not a FIGlet 2 font file (magic: %s, expected: %s)", cfg.Fontname, magicnum, FONTFILEMAGICNUMBER)
 	}
-	if numsread < 5 {
+	if numsread < 7 {
 		return fmt.Errorf("font %s: not a FIGlet 2 font file (numsread: %d)", cfg.Fontname, numsread)
 	}
 
@@ -1014,11 +1014,11 @@ func readfont(cfg *Config) error {
 		skiptoeol(fontfile)
 	}
 
-	if numsread < 6 {
+	if numsread < 8 {
 		ffright2left = 0
 	}
 
-	if numsread < 7 {
+	if numsread < 9 {
 		if smush == 0 {
 			smush2 = SM_KERN
 		} else if smush < 0 {
@@ -1276,95 +1276,99 @@ func (cfg *Config) smushamt() int {
 	}
 	maxsmush := cfg.currcharwidth
 	for row := 0; row < cfg.charheight; row++ {
-		var amt int
+		var linebd, charbd int
 		var ch1, ch2 rune
 
 		if cfg.Right2left == 1 {
 			// C: for (charbd=STRLEN(currchar[row]);
 			//      ch1=currchar[row][charbd],(charbd>0&&(!ch1||ch1==' '));charbd--) ;
-			charbd := len(cfg.currchar[row])
-			// First evaluation of condition (sets ch1)
-			if charbd < len(cfg.currchar[row]) {
-				ch1 = cfg.currchar[row][charbd]
-			} else {
-				ch1 = 0 // null terminator equivalent
-			}
-			for charbd > 0 && (ch1 == 0 || ch1 == ' ') {
-				charbd--
+			charbd = len(cfg.currchar[row])
+			for {
+				// Get ch1 at current position (null terminator if out of bounds)
 				if charbd < len(cfg.currchar[row]) {
 					ch1 = cfg.currchar[row][charbd]
 				} else {
 					ch1 = 0
 				}
+				// Check condition
+				if !(charbd > 0 && (ch1 == 0 || ch1 == ' ')) {
+					break
+				}
+				charbd--
 			}
 
 			// C: for (linebd=0;ch2=outputline[row][linebd],ch2==' ';linebd++) ;
-			linebd := 0
-			if linebd < len(cfg.outputline[row]) {
-				ch2 = cfg.outputline[row][linebd]
-			} else {
-				ch2 = 0
-			}
-			for ch2 == ' ' {
-				linebd++
+			linebd = 0
+			for {
 				if linebd < len(cfg.outputline[row]) {
 					ch2 = cfg.outputline[row][linebd]
 				} else {
 					ch2 = 0
+				}
+				if ch2 != ' ' {
 					break
 				}
+				linebd++
 			}
-			amt = linebd + cfg.currcharwidth - 1 - charbd
+			amt := linebd + cfg.currcharwidth - 1 - charbd
+
+			// C: if (!ch1||ch1==' ') { amt++; }
+			if ch1 == 0 || ch1 == ' ' {
+				amt++
+			} else if ch2 != 0 {
+				if cfg.smushem(ch1, ch2) != 0 {
+					amt++
+				}
+			}
+
+			if amt < maxsmush {
+				maxsmush = amt
+			}
 		} else {
 			// C: for (linebd=STRLEN(outputline[row]);
 			//      ch1 = outputline[row][linebd],(linebd>0&&(!ch1||ch1==' '));linebd--) ;
-			linebd := len(cfg.outputline[row])
-			// First evaluation of condition (sets ch1)
-			if linebd < len(cfg.outputline[row]) {
-				ch1 = cfg.outputline[row][linebd]
-			} else {
-				ch1 = 0 // null terminator equivalent
-			}
-			for linebd > 0 && (ch1 == 0 || ch1 == ' ') {
-				linebd--
+			linebd = len(cfg.outputline[row])
+			for {
+				// Get ch1 at current position (null terminator if out of bounds)
 				if linebd < len(cfg.outputline[row]) {
 					ch1 = cfg.outputline[row][linebd]
 				} else {
 					ch1 = 0
 				}
+				// Check condition
+				if !(linebd > 0 && (ch1 == 0 || ch1 == ' ')) {
+					break
+				}
+				linebd--
 			}
 
 			// C: for (charbd=0;ch2=currchar[row][charbd],ch2==' ';charbd++) ;
-			charbd := 0
-			if charbd < len(cfg.currchar[row]) {
-				ch2 = cfg.currchar[row][charbd]
-			} else {
-				ch2 = 0
-			}
-			for ch2 == ' ' {
-				charbd++
+			charbd = 0
+			for {
 				if charbd < len(cfg.currchar[row]) {
 					ch2 = cfg.currchar[row][charbd]
 				} else {
 					ch2 = 0
+				}
+				if ch2 != ' ' {
 					break
 				}
+				charbd++
 			}
-			amt = charbd + cfg.outlinelen - 1 - linebd
-		}
+			amt := charbd + cfg.outlinelen - 1 - linebd
 
-		// C: if (!ch1||ch1==' ') { amt++; }
-		if ch1 == 0 || ch1 == ' ' {
-			amt++
-		} else if ch2 != 0 {
-			// C: else if (ch2) { if (smushem(ch1,ch2)!='\0') { amt++; } }
-			if cfg.smushem(ch1, ch2) != 0 {
+			// C: if (!ch1||ch1==' ') { amt++; }
+			if ch1 == 0 || ch1 == ' ' {
 				amt++
+			} else if ch2 != 0 {
+				if cfg.smushem(ch1, ch2) != 0 {
+					amt++
+				}
 			}
-		}
 
-		if amt < maxsmush {
-			maxsmush = amt
+			if amt < maxsmush {
+				maxsmush = amt
+			}
 		}
 	}
 	return maxsmush
