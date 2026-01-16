@@ -1,10 +1,26 @@
+# Binaries
 figlet-bin
 figlet-go
-*.log
 chkfont-go
 chkfont
-coverage.out
+
+# Web/NPM
 website/figlet.wasm
 website/wasm_exec.js
 npm/dist/
 npm/node_modules/
+node_modules/
+
+# Logs and Coverage
+*.log
+coverage.out
+
+# Packaging
+dist/
+.goreleaser*.tmp.yaml
+packages/appimage/work/
+packages/appimage/appimagetool
+packages/appimage/*.AppImage
+
+# OS
+.DS_Store

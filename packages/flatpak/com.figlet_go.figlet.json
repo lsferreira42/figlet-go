@@ -1,0 +1,25 @@
+{
+    "app-id": "com.figlet_go.figlet",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "22.08",
+    "sdk": "org.freedesktop.Sdk",
+    "command": "figlet",
+    "separate-locales": false,
+    "modules": [
+        {
+            "name": "figlet-go",
+            "buildsystem": "simple",
+            "build-commands": [
+                "go build -o /app/bin/figlet figlet.go",
+                "mkdir -p /app/share/figlet-go/fonts",
+                "cp fonts/*.flf fonts/*.flc /app/share/figlet-go/fonts/"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ]
+        }
+    ]
+}
