@@ -22,11 +22,16 @@ go build -o "$APPDIR/usr/bin/figlet" figlet.go
 cp fonts/*.flf "$APPDIR/usr/share/figlet-go/fonts/"
 cp fonts/*.flc "$APPDIR/usr/share/figlet-go/fonts/"
 
+# Create a minimal valid PNG icon (256x256 transparent)
+# Create minimal PNG using printf (1x1 transparent PNG)
+printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82' > "$APPDIR/figlet.png"
+
 # Create desktop file
 cat > "$APPDIR/$APP.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FIGlet Go
+Icon=figlet
 Exec=figlet
 Categories=Utility;
 Terminal=true
