@@ -81,21 +81,21 @@ func NewTrueColorFromHexString(hexStr string) (*TrueColor, error) {
 	if len(hexStr) > 0 && hexStr[0] == '#' {
 		hexStr = hexStr[1:]
 	}
-	
+
 	// Must be 6 characters for RGB
 	if len(hexStr) != 6 {
 		return nil, errors.New("hex color must be 6 characters (e.g., 'FF0000' or '#FF0000')")
 	}
-	
+
 	rgb, err := hex.DecodeString(hexStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid hex color: %s", hexStr)
 	}
-	
+
 	if len(rgb) < 3 {
 		return nil, errors.New("invalid hex color format")
 	}
-	
+
 	return &TrueColor{
 		R: int(rgb[0]),
 		G: int(rgb[1]),

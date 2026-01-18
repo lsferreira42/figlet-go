@@ -23,18 +23,18 @@ type OutputParser struct {
 var parsers = map[string]OutputParser{
 	// Default terminal parser (no colors)
 	"terminal": {
-		Name:    "terminal",
-		Prefix:  "",
-		Suffix:  "",
-		NewLine: "\n",
+		Name:     "terminal",
+		Prefix:   "",
+		Suffix:   "",
+		NewLine:  "\n",
 		Replaces: nil,
 	},
 	// Terminal parser with ANSI color support
 	"terminal-color": {
-		Name:    "terminal-color",
-		Prefix:  "",
-		Suffix:  "",
-		NewLine: "\n",
+		Name:     "terminal-color",
+		Prefix:   "",
+		Suffix:   "",
+		NewLine:  "\n",
 		Replaces: nil,
 	},
 	// HTML parser

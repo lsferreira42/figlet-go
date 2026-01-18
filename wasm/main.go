@@ -279,8 +279,8 @@ func main() {
 		"getVersion":       js.FuncOf(getVersion),
 		"setWidth":         js.FuncOf(setWidth),
 		"setJustification": js.FuncOf(setJustification),
-		"setColors":         js.FuncOf(setColors),
-		"setParser":         js.FuncOf(setParser),
+		"setColors":        js.FuncOf(setColors),
+		"setParser":        js.FuncOf(setParser),
 	}))
 
 	// Signal that WASM is ready

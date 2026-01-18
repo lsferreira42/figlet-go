@@ -108,7 +108,7 @@ func getparams(cfg *figlet.Config) {
 			cfg.Optind = optind
 			break
 		}
-		
+
 		// Handle long options (--colors, --parser)
 		if len(arg) > 2 && arg[0:2] == "--" {
 			if strings.HasPrefix(arg, "--colors=") {
@@ -312,16 +312,16 @@ func parseColors(colorsStr string) []figlet.Color {
 	if colorsStr == "" {
 		return nil
 	}
-	
+
 	parts := strings.Split(colorsStr, ";")
 	colors := make([]figlet.Color, 0, len(parts))
-	
+
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue
 		}
-		
+
 		// Try predefined color names
 		switch strings.ToLower(part) {
 		case "black":
@@ -348,7 +348,7 @@ func parseColors(colorsStr string) []figlet.Color {
 			}
 		}
 	}
-	
+
 	return colors
 }
 
