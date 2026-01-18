@@ -27,7 +27,6 @@ cat > "$APPDIR/$APP.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=FIGlet Go
-Icon=figlet
 Exec=figlet
 Categories=Utility;
 Terminal=true
