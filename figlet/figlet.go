@@ -113,6 +113,16 @@ type Config struct {
 	Argv              []string
 	agetmode          int // >= 0 for displacement into argv[n], <0 EOF
 	output            *strings.Builder
+	// Color support
+	Colors       []Color
+	OutputParser *OutputParser
+	// Track current character index for color cycling
+	currentCharIndex int
+	// Track which input character is at each output position for each line
+	// Maps line index -> column index -> input character index
+	charPositionMap [][]int
+	// Current line being built (for charPositionMap)
+	currentLineIndex int
 }
 
 // New creates a new Config with default values
@@ -129,6 +139,9 @@ func New() *Config {
 	}
 	cfg.cfilelistend = &cfg.cfilelist
 	cfg.commandlistend = &cfg.commandlist
+	// Default parser is terminal (no colors)
+	parser, _ := GetParser("terminal")
+	cfg.OutputParser = parser
 	return cfg
 }
 
@@ -227,6 +240,36 @@ func WithOverlapping() Option {
 	}
 }
 
+// WithColors sets the colors to use for rendering
+func WithColors(colors ...Color) Option {
+	return func(cfg *Config) {
+		cfg.Colors = colors
+		// If colors are set and parser is still default terminal, switch to terminal-color
+		// But don't override if user explicitly set a parser (like HTML)
+		if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
+			parser, _ := GetParser("terminal-color")
+			cfg.OutputParser = parser
+		}
+	}
+}
+
+// WithParser sets the output parser
+func WithParser(parserName string) Option {
+	return func(cfg *Config) {
+		parser, err := GetParser(parserName)
+		if err == nil {
+			cfg.OutputParser = parser
+		}
+	}
+}
+
+// WithOutputParser sets the output parser directly
+func WithOutputParser(parser *OutputParser) Option {
+	return func(cfg *Config) {
+		cfg.OutputParser = parser
+	}
+}
+
 // Render renders the given text using FIGlet and returns the result as a string
 func Render(text string, options ...Option) (string, error) {
 	cfg := New()
@@ -264,6 +307,17 @@ func (cfg *Config) RenderString(text string) string {
 	cfg.Argv = []string{"figlet", text}
 	cfg.Optind = 1
 	cfg.agetmode = 0
+	cfg.currentCharIndex = 0
+	cfg.currentLineIndex = 0
+	cfg.charPositionMap = make([][]int, cfg.charheight)
+	for i := range cfg.charPositionMap {
+		cfg.charPositionMap[i] = make([]int, 0, 100)
+	}
+
+	// Write parser prefix if any
+	if cfg.OutputParser != nil && cfg.OutputParser.Prefix != "" {
+		cfg.output.WriteString(cfg.OutputParser.Prefix)
+	}
 
 	wordbreakmode := 0
 	last_was_eol_flag := false
@@ -379,6 +433,11 @@ func (cfg *Config) RenderString(text string) string {
 
 	if cfg.outlinelen != 0 {
 		cfg.printline()
+	}
+
+	// Write parser suffix if any
+	if cfg.OutputParser != nil && cfg.OutputParser.Suffix != "" {
+		cfg.output.WriteString(cfg.OutputParser.Suffix)
 	}
 
 	return cfg.output.String()
@@ -906,6 +965,9 @@ func readcontrolfiles(cfg *Config) {
 func (cfg *Config) clearline() {
 	for i := 0; i < cfg.charheight; i++ {
 		cfg.outputline[i] = cfg.outputline[i][:0]
+		if cfg.charPositionMap != nil && i < len(cfg.charPositionMap) {
+			cfg.charPositionMap[i] = cfg.charPositionMap[i][:0]
+		}
 	}
 	cfg.outlinelen = 0
 	cfg.inchrlinelen = 0
@@ -1388,6 +1450,12 @@ func (cfg *Config) addchar(c rune) bool {
 		return false
 	}
 
+	// Track character position for color mapping (only for non-space characters)
+	trackChar := c != ' ' && c != '\n' && c != '\t'
+	if trackChar {
+		cfg.currentCharIndex++
+	}
+
 	for row := 0; row < cfg.charheight; row++ {
 		if cfg.Right2left == 1 {
 			templine := make([]rune, len(cfg.currchar[row]))
@@ -1404,10 +1472,42 @@ func (cfg *Config) addchar(c rune) bool {
 			remaining := len(cfg.outputline[row])
 			if smushamount < remaining {
 				cfg.outputline[row] = append(templine, cfg.outputline[row][smushamount:]...)
+				// Track character positions for Right2left
+				if trackChar && row < len(cfg.charPositionMap) {
+					charWidth := len(templine)
+					// Insert at the beginning for Right2left
+					newMap := make([]int, charWidth)
+					charIdx := cfg.currentCharIndex - 1
+					for i := range newMap {
+						newMap[i] = charIdx
+					}
+					// Only slice if we have enough elements
+					if smushamount < len(cfg.charPositionMap[row]) {
+						cfg.charPositionMap[row] = append(newMap, cfg.charPositionMap[row][smushamount:]...)
+					} else {
+						cfg.charPositionMap[row] = newMap
+					}
+				}
 			} else {
 				cfg.outputline[row] = templine
+				// Track character positions for Right2left
+				if trackChar && row < len(cfg.charPositionMap) {
+					charWidth := len(templine)
+					newMap := make([]int, charWidth)
+					charIdx := cfg.currentCharIndex - 1
+					for i := range newMap {
+						newMap[i] = charIdx
+					}
+					cfg.charPositionMap[row] = newMap
+				}
 			}
 		} else {
+			// Track character positions for color mapping
+			startCol := cfg.outlinelen - smushamount
+			if startCol < 0 {
+				startCol = 0
+			}
+
 			for k := 0; k < smushamount; k++ {
 				column := cfg.outlinelen - smushamount + k
 				if column < 0 {
@@ -1415,10 +1515,21 @@ func (cfg *Config) addchar(c rune) bool {
 				}
 				if column < len(cfg.outputline[row]) && k < len(cfg.currchar[row]) {
 					cfg.outputline[row][column] = cfg.smushem(cfg.outputline[row][column], cfg.currchar[row][k])
+					// Update character position map for smushed positions
+					if trackChar && row < len(cfg.charPositionMap) && column < len(cfg.charPositionMap[row]) {
+						// Keep the existing character index for smushed positions
+					}
 				}
 			}
 			if smushamount < len(cfg.currchar[row]) {
 				cfg.outputline[row] = append(cfg.outputline[row], cfg.currchar[row][smushamount:]...)
+				// Track character positions for new columns
+				if trackChar && row < len(cfg.charPositionMap) {
+					charWidth := len(cfg.currchar[row]) - smushamount
+					for i := 0; i < charWidth; i++ {
+						cfg.charPositionMap[row] = append(cfg.charPositionMap[row], cfg.currentCharIndex-1)
+					}
+				}
 			}
 		}
 	}
@@ -1442,19 +1553,84 @@ func (cfg *Config) putstring(str []rune) {
 			}
 		}
 	}
+
+	// Apply colors if enabled
+	hasColors := len(cfg.Colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name != "terminal"
+
 	for i := 0; i < length; i++ {
 		if i < len(str) {
+			var charStr string
 			if str[i] == cfg.hardblank {
-				cfg.output.WriteString(" ")
+				charStr = " "
 			} else {
-				cfg.output.WriteString(string(str[i]))
+				charStr = string(str[i])
 			}
+
+			// Apply color if enabled
+			if hasColors {
+				charStr = cfg.applyColorToChar(charStr, i)
+			} else {
+				// Apply parser replacements even without colors
+				if cfg.OutputParser != nil {
+					charStr = handleReplaces(charStr, cfg.OutputParser)
+				}
+			}
+
+			cfg.output.WriteString(charStr)
 		}
 	}
-	cfg.output.WriteString("\n")
+
+	// Use parser's newline representation
+	newline := "\n"
+	if cfg.OutputParser != nil && cfg.OutputParser.NewLine != "" {
+		newline = cfg.OutputParser.NewLine
+	}
+	cfg.output.WriteString(newline)
+
+	// Move to next line for character position tracking
+	cfg.currentLineIndex++
+	if cfg.currentLineIndex >= cfg.charheight {
+		cfg.currentLineIndex = 0
+	}
+}
+
+// applyColorToChar applies color to a character based on its position in the line
+func (cfg *Config) applyColorToChar(charStr string, position int) string {
+	if len(cfg.Colors) == 0 {
+		return handleReplaces(charStr, cfg.OutputParser)
+	}
+
+	// Get the input character index for this position
+	charIndex := -1
+	if cfg.charPositionMap != nil && cfg.currentLineIndex < len(cfg.charPositionMap) {
+		if position < len(cfg.charPositionMap[cfg.currentLineIndex]) {
+			charIndex = cfg.charPositionMap[cfg.currentLineIndex][position]
+		}
+	}
+
+	// If we couldn't map to an input character, use position-based cycling
+	if charIndex < 0 {
+		charIndex = position
+	}
+
+	// Cycle through colors based on character index
+	colorIndex := charIndex % len(cfg.Colors)
+	if colorIndex < 0 {
+		colorIndex = 0
+	}
+	color := cfg.Colors[colorIndex]
+
+	prefix := color.getPrefix(cfg.OutputParser)
+	suffix := color.getSuffix(cfg.OutputParser)
+
+	// Apply parser replacements
+	replaced := handleReplaces(charStr, cfg.OutputParser)
+
+	return prefix + replaced + suffix
 }
 
 func (cfg *Config) printline() {
+	cfg.currentLineIndex = 0
 	for i := 0; i < cfg.charheight; i++ {
 		cfg.putstring(cfg.outputline[i])
 	}

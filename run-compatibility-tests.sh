@@ -3,8 +3,8 @@
 # Script de teste de compatibilidade entre a versão C e Go do figlet
 # Testa todas as fonts disponíveis com uma palavra de teste
 #
-# Uso: ./test-compatibility.sh [palavra_de_teste]
-# Exemplo: ./test-compatibility.sh "HELLO"
+# Uso: ./run-compatibility-tests.sh [palavra_de_teste]
+# Exemplo: ./run-compatibility-tests.sh "HELLO"
 
 LC_ALL=POSIX
 export LC_ALL

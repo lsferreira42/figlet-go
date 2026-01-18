@@ -13,6 +13,8 @@ const elements = {
     fontSelect: document.getElementById('font-select'),
     widthInput: document.getElementById('width-input'),
     alignSelect: document.getElementById('align-select'),
+    parserSelect: document.getElementById('parser-select'),
+    colorsInput: document.getElementById('colors-input'),
     output: document.getElementById('output'),
     copyBtn: document.getElementById('copy-btn'),
     downloadBtn: document.getElementById('download-btn'),
@@ -150,6 +152,66 @@ function setupEventListeners() {
         render();
     });
     
+    // Parser select
+    elements.parserSelect.addEventListener('change', () => {
+        // Don't allow changing parser if colors are set
+        const colorsStr = elements.colorsInput.value.trim();
+        if (colorsStr !== '') {
+            // Force back to HTML
+            elements.parserSelect.value = 'html';
+            showToast('HTML output is required when colors are set', 'info');
+            return;
+        }
+        
+        const parser = elements.parserSelect.value;
+        const result = figlet.setParser(parser);
+        if (result.error) {
+            showToast(`Parser error: ${result.error}`, 'error');
+        }
+        render();
+    });
+    
+    // Colors input - debounced
+    elements.colorsInput.addEventListener('input', () => {
+        clearTimeout(state.debounceTimer);
+        state.debounceTimer = setTimeout(() => {
+            const colorsStr = elements.colorsInput.value.trim();
+            if (colorsStr === '') {
+                // Clear colors - re-enable parser select
+                const result = figlet.setColors([]);
+                if (result.error) {
+                    showToast(`Color error: ${result.error}`, 'error');
+                } else {
+                    // Re-enable parser select
+                    elements.parserSelect.disabled = false;
+                    elements.parserSelect.style.opacity = '1';
+                    elements.parserSelect.style.cursor = 'pointer';
+                }
+            } else {
+                // Parse colors
+                const colors = colorsStr.split(';').map(c => c.trim()).filter(c => c);
+                const result = figlet.setColors(colors);
+                if (result.error) {
+                    showToast(`Color error: ${result.error}`, 'error');
+                } else {
+                    // Force HTML parser when colors are set
+                    if (elements.parserSelect.value !== 'html') {
+                        elements.parserSelect.value = 'html';
+                        const parserResult = figlet.setParser('html');
+                        if (parserResult.error) {
+                            showToast(`Parser error: ${parserResult.error}`, 'error');
+                        }
+                    }
+                    // Disable parser select
+                    elements.parserSelect.disabled = true;
+                    elements.parserSelect.style.opacity = '0.6';
+                    elements.parserSelect.style.cursor = 'not-allowed';
+                }
+            }
+            render();
+        }, 300);
+    });
+    
     // Copy button
     elements.copyBtn.addEventListener('click', copyToClipboard);
     
@@ -184,6 +246,7 @@ function render() {
     if (!state.ready) return;
     
     const text = elements.textInput.value || 'Hello';
+    const parser = elements.parserSelect.value;
     const result = figlet.render(text);
     
     if (result.error) {
@@ -191,7 +254,14 @@ function render() {
         return;
     }
     
-    elements.output.textContent = result.result || '(empty output)';
+    const outputText = result.result || '(empty output)';
+    
+    // If HTML parser, render as HTML, otherwise as text
+    if (parser === 'html') {
+        elements.output.innerHTML = outputText;
+    } else {
+        elements.output.textContent = outputText;
+    }
 }
 
 // Copy output to clipboard

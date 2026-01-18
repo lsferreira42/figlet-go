@@ -10,6 +10,7 @@ This document provides a complete tutorial and API reference for using FIGlet-Go
   - [Basic Usage](#basic-usage)
   - [Using Different Fonts](#using-different-fonts)
   - [Configuration Options](#configuration-options)
+  - [Colors and Output Formats](#colors-and-output-formats)
   - [Advanced Usage with Config](#advanced-usage-with-config)
   - [Listing Available Fonts](#listing-available-fonts)
 - [API Reference](#api-reference)
@@ -162,6 +163,9 @@ result, err := figlet.Render("Centered",
 | `WithFullWidth()` | Disable smushing (full width) |
 | `WithSmushing()` | Force smushing |
 | `WithOverlapping()` | Enable overlapping mode |
+| `WithColors(...Color)` | Set colors for rendering |
+| `WithParser(name)` | Set output parser (terminal, terminal-color, html) |
+| `WithOutputParser(parser)` | Set output parser directly |
 
 #### Justification Examples
 
@@ -188,6 +192,158 @@ result, _ := figlet.Render("Kern", figlet.WithKerning())
 // Smushing - characters overlap (default for most fonts)
 result, _ := figlet.Render("Smush", figlet.WithSmushing())
 ```
+
+### Colors and Output Formats
+
+FIGlet-Go supports colors (ANSI and TrueColor) and multiple output formats.
+
+#### Using Colors
+
+You can use ANSI colors (8 basic colors) or TrueColor (24-bit RGB):
+
+```go
+// ANSI colors
+result, err := figlet.Render("Colors!",
+    figlet.WithColors(figlet.ColorRed, figlet.ColorGreen, figlet.ColorBlue),
+)
+
+// TrueColor from hex string
+tcRed, _ := figlet.NewTrueColorFromHexString("FF0000")
+tcGreen, _ := figlet.NewTrueColorFromHexString("00FF00")
+tcBlue, _ := figlet.NewTrueColorFromHexString("0000FF")
+
+result, err := figlet.Render("TrueColor",
+    figlet.WithColors(tcRed, tcGreen, tcBlue),
+)
+```
+
+**Available ANSI Colors:**
+- `figlet.ColorBlack`
+- `figlet.ColorRed`
+- `figlet.ColorGreen`
+- `figlet.ColorYellow`
+- `figlet.ColorBlue`
+- `figlet.ColorMagenta`
+- `figlet.ColorCyan`
+- `figlet.ColorWhite`
+
+**Creating TrueColor:**
+```go
+// From hex string (with or without #)
+tc, err := figlet.NewTrueColorFromHexString("FF0000")  // red
+tc, err := figlet.NewTrueColorFromHexString("#00FF00") // green
+```
+
+**Color Cycling:**
+When you specify multiple colors, they cycle through each character position in the rendered output:
+
+```go
+// Colors will cycle: red, green, blue, red, green, blue...
+result, _ := figlet.Render("Hello",
+    figlet.WithColors(figlet.ColorRed, figlet.ColorGreen, figlet.ColorBlue),
+)
+```
+
+#### Output Formats (Parsers)
+
+FIGlet-Go supports three output formats:
+
+**1. Terminal (Default)**
+Plain text output without formatting codes:
+
+```go
+result, err := figlet.Render("Hello",
+    figlet.WithParser("terminal"),
+)
+```
+
+**2. Terminal with Colors**
+Output with ANSI color codes. Automatically selected when using `WithColors`:
+
+```go
+// Automatically uses terminal-color parser
+result, err := figlet.Render("Hello",
+    figlet.WithColors(figlet.ColorRed, figlet.ColorGreen),
+)
+
+// Explicit terminal-color parser
+result, err := figlet.Render("Hello",
+    figlet.WithParser("terminal-color"),
+    figlet.WithColors(figlet.ColorRed),
+)
+```
+
+**3. HTML**
+Output formatted as HTML with `<code>` tags and HTML entities:
+
+```go
+// HTML without colors
+result, err := figlet.Render("Hello",
+    figlet.WithParser("html"),
+)
+
+// HTML with colors (rendered as <span> tags)
+result, err := figlet.Render("Hello",
+    figlet.WithParser("html"),
+    figlet.WithColors(figlet.ColorRed, figlet.ColorBlue),
+)
+```
+
+#### Complete Example: Colored HTML Output
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    // Create TrueColor from hex
+    tcRed, _ := figlet.NewTrueColorFromHexString("FF0000")
+    tcGreen, _ := figlet.NewTrueColorFromHexString("00FF00")
+    tcBlue, _ := figlet.NewTrueColorFromHexString("0000FF")
+    
+    // Render with HTML parser and colors
+    result, err := figlet.Render("FIGlet",
+        figlet.WithFont("banner"),
+        figlet.WithParser("html"),
+        figlet.WithColors(tcRed, tcGreen, tcBlue),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Print(result)
+    // Output: <code><span style='color: rgb(255,0,0);'>...</span>...</code>
+}
+```
+
+#### Using Parser Directly
+
+You can also get and use a parser directly:
+
+```go
+// Get a parser
+parser, err := figlet.GetParser("html")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Use it
+result, err := figlet.Render("Hello",
+    figlet.WithOutputParser(parser),
+    figlet.WithColors(figlet.ColorRed),
+)
+```
+
+**Available Parsers:**
+- `"terminal"` - Plain text output (default)
+- `"terminal-color"` - Terminal output with ANSI color support
+- `"html"` - HTML formatted output
 
 ### Advanced Usage with Config
 
@@ -220,6 +376,8 @@ fmt.Print(result)
 | `Smushoverride` | `int` | Override font's smush mode |
 | `Paragraphflag` | `bool` | Enable paragraph mode |
 | `Deutschflag` | `bool` | Enable German character translation |
+| `Colors` | `[]Color` | Colors to apply to output |
+| `OutputParser` | `*OutputParser` | Output format parser |
 
 #### Config Methods
 
@@ -366,6 +524,56 @@ Returns the current terminal width. Returns -1 if it cannot be determined.
 
 ---
 
+#### `GetParser`
+
+```go
+func GetParser(key string) (*OutputParser, error)
+```
+
+Returns an output parser by its key.
+
+**Parameters:**
+- `key` - Parser name: `"terminal"`, `"terminal-color"`, or `"html"`
+
+**Returns:**
+- A pointer to an OutputParser
+- An error if the parser key is invalid
+
+**Example:**
+```go
+parser, err := figlet.GetParser("html")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+---
+
+#### `NewTrueColorFromHexString`
+
+```go
+func NewTrueColorFromHexString(hexStr string) (*TrueColor, error)
+```
+
+Creates a TrueColor from a hexadecimal string.
+
+**Parameters:**
+- `hexStr` - Hexadecimal color string (e.g., "FF0000" or "#FF0000")
+
+**Returns:**
+- A pointer to a TrueColor
+- An error if the hex string is invalid
+
+**Example:**
+```go
+tc, err := figlet.NewTrueColorFromHexString("FF0000")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+---
+
 #### `New`
 
 ```go
@@ -426,6 +634,96 @@ type Option func(*Config)
 ```
 
 Function type for configuring a FIGlet instance.
+
+---
+
+#### `Color`
+
+```go
+type Color interface {
+    getPrefix(parser *OutputParser) string
+    getSuffix(parser *OutputParser) string
+}
+```
+
+Interface for color types. Implemented by `AnsiColor` and `TrueColor`.
+
+---
+
+#### `AnsiColor`
+
+```go
+type AnsiColor struct {
+    code int
+}
+```
+
+Represents an ANSI color code (30-37 for foreground colors).
+
+**Predefined Colors:**
+- `figlet.ColorBlack`
+- `figlet.ColorRed`
+- `figlet.ColorGreen`
+- `figlet.ColorYellow`
+- `figlet.ColorBlue`
+- `figlet.ColorMagenta`
+- `figlet.ColorCyan`
+- `figlet.ColorWhite`
+
+---
+
+#### `TrueColor`
+
+```go
+type TrueColor struct {
+    R int // Red component (0-255)
+    G int // Green component (0-255)
+    B int // Blue component (0-255)
+}
+```
+
+Represents a 24-bit RGB color.
+
+**Creating TrueColor:**
+```go
+// From hex string
+tc, err := figlet.NewTrueColorFromHexString("FF0000")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Function:**
+- `NewTrueColorFromHexString(hexStr string) (*TrueColor, error)` - Creates a TrueColor from a hexadecimal string (e.g., "FF0000" or "#FF0000")
+
+---
+
+#### `OutputParser`
+
+```go
+type OutputParser struct {
+    Name     string            // Parser name
+    Prefix   string            // Prefix to add before output
+    Suffix   string            // Suffix to add after output
+    NewLine  string            // Newline representation
+    Replaces map[string]string // Character replacements
+}
+```
+
+Defines how to format the output.
+
+**Getting a Parser:**
+```go
+parser, err := figlet.GetParser("html")
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+**Available Parsers:**
+- `"terminal"` - Plain text, no formatting
+- `"terminal-color"` - Terminal with ANSI color codes
+- `"html"` - HTML formatted with `<code>` tags
 
 ---
 
@@ -535,6 +833,72 @@ func WithOverlapping() Option
 ```
 
 Enables overlapping mode.
+
+---
+
+#### `WithColors`
+
+```go
+func WithColors(colors ...Color) Option
+```
+
+Sets colors to use for rendering. Colors cycle through each character position in the output.
+
+**Parameters:**
+- `colors` - One or more Color values (AnsiColor or TrueColor)
+
+**Example:**
+```go
+result, _ := figlet.Render("Hello",
+    figlet.WithColors(figlet.ColorRed, figlet.ColorGreen, figlet.ColorBlue),
+)
+```
+
+**Note:** When colors are set, the parser automatically switches to `terminal-color` if it's still set to the default `terminal` parser. If you've explicitly set a parser (like `html`), it won't be overridden.
+
+---
+
+#### `WithParser`
+
+```go
+func WithParser(parserName string) Option
+```
+
+Sets the output parser by name.
+
+**Parameters:**
+- `parserName` - Parser name: `"terminal"`, `"terminal-color"`, or `"html"`
+
+**Returns:**
+- An Option function
+
+**Example:**
+```go
+result, _ := figlet.Render("Hello",
+    figlet.WithParser("html"),
+)
+```
+
+---
+
+#### `WithOutputParser`
+
+```go
+func WithOutputParser(parser *OutputParser) Option
+```
+
+Sets the output parser directly using an OutputParser instance.
+
+**Parameters:**
+- `parser` - A pointer to an OutputParser
+
+**Example:**
+```go
+parser, _ := figlet.GetParser("html")
+result, _ := figlet.Render("Hello",
+    figlet.WithOutputParser(parser),
+)
+```
 
 ---
 
@@ -720,6 +1084,101 @@ func main() {
 }
 ```
 
+### Example 6: Colored Output
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    // ANSI colors
+    result, err := figlet.Render("Colors!",
+        figlet.WithColors(figlet.ColorRed, figlet.ColorGreen, figlet.ColorBlue),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Print(result)
+}
+```
+
+### Example 7: HTML Output with Colors
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "os"
+
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    // Create TrueColor from hex
+    tcRed, _ := figlet.NewTrueColorFromHexString("FF0000")
+    tcGreen, _ := figlet.NewTrueColorFromHexString("00FF00")
+    tcBlue, _ := figlet.NewTrueColorFromHexString("0000FF")
+    
+    // Render as HTML with colors
+    result, err := figlet.Render("FIGlet",
+        figlet.WithFont("banner"),
+        figlet.WithParser("html"),
+        figlet.WithColors(tcRed, tcGreen, tcBlue),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Write to HTML file
+    os.WriteFile("output.html", []byte(result), 0644)
+    fmt.Println("HTML output written to output.html")
+}
+```
+
+### Example 8: Config with Colors
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    cfg := figlet.New()
+    cfg.Fontname = "slant"
+    
+    // Set colors
+    cfg.Colors = []figlet.Color{
+        figlet.ColorRed,
+        figlet.ColorGreen,
+        figlet.ColorBlue,
+    }
+    
+    // Set parser for colored output
+    parser, _ := figlet.GetParser("terminal-color")
+    cfg.OutputParser = parser
+    
+    if err := cfg.LoadFont(); err != nil {
+        log.Fatal(err)
+    }
+    
+    result := cfg.RenderString("Hello")
+    fmt.Print(result)
+}
+```
+
 ---
 
 ## Best Practices
@@ -738,6 +1197,7 @@ func main() {
 
 ## See Also
 
+- [Colors and Output Formats Guide](colors_outputs.md) - Command-line usage of colors and parsers
 - [FIGlet Official Website](http://www.figlet.org/)
 - [FIGlet Font Database](http://www.figlet.org/fontdb.cgi)
 - [FIGlet-Go Repository](https://github.com/lsferreira42/figlet-go)

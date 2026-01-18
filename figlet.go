@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/lsferreira42/figlet-go/figlet"
 )
@@ -37,7 +38,9 @@ func printusage(cfg *figlet.Config, out io.Writer) {
 	myname := getmyname(cfg.Argv)
 	fmt.Fprintf(out, "Usage: %s [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]\n", myname)
 	fmt.Fprintf(out, "              [ -f fontfile ] [ -m smushmode ] [ -w outputwidth ]\n")
-	fmt.Fprintf(out, "              [ -C controlfile ] [ -I infocode ] [ message ]\n")
+	fmt.Fprintf(out, "              [ -C controlfile ] [ -I infocode ]\n")
+	fmt.Fprintf(out, "              [ --colors color1;color2;... ] [ --parser terminal|terminal-color|html ]\n")
+	fmt.Fprintf(out, "              [ message ]\n")
 }
 
 func printinfo(cfg *figlet.Config, infonum int) {
@@ -104,6 +107,47 @@ func getparams(cfg *figlet.Config) {
 			cfg.Cmdinput = true
 			cfg.Optind = optind
 			break
+		}
+		
+		// Handle long options (--colors, --parser)
+		if len(arg) > 2 && arg[0:2] == "--" {
+			if strings.HasPrefix(arg, "--colors=") {
+				colorsStr := arg[9:]
+				colors := parseColors(colorsStr)
+				cfg.Colors = colors
+				// Only auto-switch to terminal-color if parser is still default terminal
+				// Don't override if user explicitly set a parser (like HTML)
+				if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
+					parser, _ := figlet.GetParser("terminal-color")
+					cfg.OutputParser = parser
+				}
+			} else if arg == "--colors" && optind+1 < len(cfg.Argv) {
+				colorsStr := cfg.Argv[optind+1]
+				colors := parseColors(colorsStr)
+				cfg.Colors = colors
+				// Only auto-switch to terminal-color if parser is still default terminal
+				// Don't override if user explicitly set a parser (like HTML)
+				if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
+					parser, _ := figlet.GetParser("terminal-color")
+					cfg.OutputParser = parser
+				}
+				optind++
+			} else if strings.HasPrefix(arg, "--parser=") {
+				parserName := arg[9:]
+				parser, err := figlet.GetParser(parserName)
+				if err == nil {
+					cfg.OutputParser = parser
+				}
+			} else if arg == "--parser" && optind+1 < len(cfg.Argv) {
+				parserName := cfg.Argv[optind+1]
+				parser, err := figlet.GetParser(parserName)
+				if err == nil {
+					cfg.OutputParser = parser
+				}
+				optind++
+			}
+			optind++
+			continue
 		}
 
 		for i := 1; i < len(arg); i++ {
@@ -261,6 +305,51 @@ func getparams(cfg *figlet.Config) {
 		printinfo(cfg, infoprint)
 		os.Exit(0)
 	}
+}
+
+// parseColors parses a color string (e.g., "red;green;blue" or "FF0000;00FF00")
+func parseColors(colorsStr string) []figlet.Color {
+	if colorsStr == "" {
+		return nil
+	}
+	
+	parts := strings.Split(colorsStr, ";")
+	colors := make([]figlet.Color, 0, len(parts))
+	
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		
+		// Try predefined color names
+		switch strings.ToLower(part) {
+		case "black":
+			colors = append(colors, figlet.ColorBlack)
+		case "red":
+			colors = append(colors, figlet.ColorRed)
+		case "green":
+			colors = append(colors, figlet.ColorGreen)
+		case "yellow":
+			colors = append(colors, figlet.ColorYellow)
+		case "blue":
+			colors = append(colors, figlet.ColorBlue)
+		case "magenta":
+			colors = append(colors, figlet.ColorMagenta)
+		case "cyan":
+			colors = append(colors, figlet.ColorCyan)
+		case "white":
+			colors = append(colors, figlet.ColorWhite)
+		default:
+			// Try to parse as hex color
+			tc, err := figlet.NewTrueColorFromHexString(part)
+			if err == nil {
+				colors = append(colors, tc)
+			}
+		}
+	}
+	
+	return colors
 }
 
 func processInput(cfg *figlet.Config) {

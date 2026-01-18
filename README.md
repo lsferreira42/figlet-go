@@ -52,26 +52,40 @@ go install github.com/lsferreira42/figlet-go@latest
 
 ```bash
 # pipe text
-echo "Hello World" | ./figlet
+echo "Hello World" | ./figlet-bin
 
 # pass as argument
-./figlet "Hello World"
+./figlet-bin "Hello World"
 
 # use a different font
-./figlet -f banner "Hello"
+./figlet-bin -f banner "Hello"
 
 # centered with slant font
-./figlet -c -f slant "Centered"
+./figlet-bin -c -f slant "Centered"
 
 # right-to-left (Hebrew font)
-./figlet -R -f ivrit "Hello"
+./figlet-bin -R -f ivrit "Hello"
 
 # custom width
-./figlet -w 120 "Wide output"
+./figlet-bin -w 120 "Wide output"
 
 # full width (no smushing)
-./figlet -W "FULL"
+./figlet-bin -W "FULL"
+
+# with colors (ANSI)
+./figlet-bin --colors 'red;green;blue' "Colors"
+
+# with TrueColor (hex)
+./figlet-bin --colors 'FF0000;00FF00;0000FF' "TrueColor"
+
+# HTML output
+./figlet-bin --parser html "HTML Output"
+
+# colored HTML output
+./figlet-bin --parser html --colors 'red;green;blue' "Colored HTML"
 ```
+
+📖 **[Complete Colors and Output Formats Guide →](colors_outputs.md)**
 
 Sample output with different fonts:
 
@@ -128,6 +142,8 @@ Usage: figlet [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]
 | `-t` | Use terminal width |
 | `-v` | Display version info |
 | `-I code` | Display info (0=version, 1=version int, 2=font dir, 3=font name, 4=output width, 5=supported font formats) |
+| `--colors colors` | Set colors for output (e.g., `--colors red;green;blue` or `--colors FF0000;00FF00`) - See [Colors Guide](colors_outputs.md) |
+| `--parser parser` | Set output parser (`terminal`, `terminal-color`, or `html`) - See [Output Formats Guide](colors_outputs.md) |
 
 ### chkfont
 
@@ -272,6 +288,12 @@ func main() {
 - **Full Control**: Use `Config` struct directly for advanced usage
 - **146 Embedded Fonts**: All fonts from [figlet.org](http://www.figlet.org/fontdb.cgi) are embedded
 - **Font Discovery**: `ListFonts()` returns all available fonts
+- **Color Support**: ANSI colors and TrueColor (24-bit RGB) support
+- **Output Parsers**: Terminal (normal), terminal with colors, and HTML output formats
+
+📖 **[Colors and Output Formats Documentation →](colors_outputs.md)** - Complete guide for command-line usage
+- **Color Support**: ANSI colors and TrueColor (24-bit RGB) support
+- **Output Parsers**: Terminal (normal), terminal with colors, and HTML output formats
 
 📖 **[Full Library Documentation →](lib.md)**
 
@@ -360,7 +382,7 @@ There are also control files (`.flc`) for different encodings: UTF-8, ISO 646 va
 You can use fonts from other directories:
 
 ```bash
-./figlet -d /path/to/fonts -f myfont "Hello"
+./figlet-bin -d /path/to/fonts -f myfont "Hello"
 # or
 export FIGLET_FONTDIR=/path/to/fonts
 ```
@@ -421,7 +443,7 @@ figlet-go/
 ├── run-tests.sh           # main test runner
 ├── run-lib-tests.sh       # library test runner
 ├── run-chkfont-tests.sh   # chkfont test runner
-├── test-compatibility.sh  # tests against C version
+├── run-compatibility-tests.sh  # tests against C version
 ├── fonts/                 # fonts for CLI (also embedded in library)
 └── tests/                 # 26 test cases + input files
 ```
@@ -440,8 +462,8 @@ Done:
 - [x] **JavaScript/npm package** ([npm](https://www.npmjs.com/package/figlet-go))
 
 Next:
-- [ ] Color support (ANSI and TrueColor)
-- [ ] Output parsers (terminal with colors, HTML)
+- [x] **Color support (ANSI and TrueColor)** ✓ - See [Colors and Output Formats Guide](colors_outputs.md)
+- [x] **Output parsers (terminal with colors, HTML)** ✓ - See [Colors and Output Formats Guide](colors_outputs.md)
 
 The color and parser ideas come from [figlet4go](https://github.com/mbndr/figlet4go).
 

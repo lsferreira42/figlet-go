@@ -59,4 +59,49 @@ func main() {
 
 	// Get version info
 	fmt.Printf("\nFIGlet version: %s (int: %d)\n", figlet.GetVersion(), figlet.GetVersionInt())
+
+	// With colors (ANSI)
+	fmt.Println("\n=== Colors (ANSI) ===")
+	result, err = figlet.Render("Colors!",
+		figlet.WithColors(figlet.ColorRed, figlet.ColorGreen, figlet.ColorBlue),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(result)
+
+	// With TrueColor (hex)
+	fmt.Println("\n=== TrueColor (hex) ===")
+	tcRed, _ := figlet.NewTrueColorFromHexString("FF0000")
+	tcGreen, _ := figlet.NewTrueColorFromHexString("00FF00")
+	tcBlue, _ := figlet.NewTrueColorFromHexString("0000FF")
+	result, err = figlet.Render("TrueColor",
+		figlet.WithColors(tcRed, tcGreen, tcBlue),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(result)
+
+	// HTML output
+	fmt.Println("\n=== HTML Output ===")
+	result, err = figlet.Render("HTML",
+		figlet.WithParser("html"),
+		figlet.WithColors(figlet.ColorRed, figlet.ColorBlue),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(result)
+
+	// Terminal with colors
+	fmt.Println("\n=== Terminal with Colors ===")
+	result, err = figlet.Render("Terminal Colors",
+		figlet.WithParser("terminal-color"),
+		figlet.WithColors(figlet.ColorYellow, figlet.ColorCyan, figlet.ColorMagenta),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(result)
 }

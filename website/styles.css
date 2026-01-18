@@ -330,6 +330,28 @@ main {
     text-align: center;
 }
 
+#colors-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+#colors-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+#colors-input::placeholder {
+    color: var(--text-muted);
+}
+
 /* Output section */
 .output-section {
     background: var(--bg-surface);

@@ -14,7 +14,7 @@ NPM := npm
 # Tool Check Macro
 CHECK_TOOL = @command -v $(1) >/dev/null 2>&1 || { echo >&2 "Error: $(1) is not installed. Please install $(1) to continue."; exit 1; }
 
-.PHONY: all build build-chkfont build-wasm clean test test-lib test-chkfont run install help
+.PHONY: all build build-chkfont build-wasm clean test test-lib test-chkfont test-colors test-output run install help
 .PHONY: website serve-website npm-build npm-publish
 .PHONY: packages package-deb package-rpm package-apk package-arch package-appimage
 
@@ -117,7 +117,7 @@ clean:
 	rm -f $(BINARY) figlet-go $(CHKFONT)
 	rm -f $(WASM_OUT)
 	rm -rf npm/dist
-	rm -f tests.log compatibility-test.log lib-tests.log coverage.out
+	rm -f tests.log compatibility-test.log lib-tests.log colors-tests.log output-tests.log coverage.out
 	rm -rf dist/ packages/appimage/work/ packages/appimage/*.AppImage
 	@echo "Clean complete."
 
@@ -144,10 +144,18 @@ test-chkfont: build-chkfont
 # Run compatibility tests against C version (requires figlet in PATH)
 test-compat: build
 	@echo "Running compatibility tests..."
-	FIGLET_BIN=./$(BINARY) ./test-compatibility.sh TEST
+	FIGLET_BIN=./$(BINARY) ./run-compatibility-tests.sh TEST
 
 # Run all tests
-test-all: test test-lib test-chkfont
+test-colors: build
+	@echo "Running color tests..."
+	./run-colors-tests.sh
+
+test-output: build
+	@echo "Running output parser tests..."
+	./run-output-tests.sh
+
+test-all: test test-lib test-chkfont test-colors test-output
 	@echo "All tests complete."
 
 # Run figlet with example text
@@ -182,6 +190,8 @@ help:
 	@echo "  test-lib       - Run the library test suite"
 	@echo "  test-lib-cover - Run library tests with coverage"
 	@echo "  test-chkfont   - Run the chkfont test suite"
+	@echo "  test-colors    - Run color support tests (ANSI and TrueColor)"
+	@echo "  test-output    - Run output parser tests (terminal, html)"
 	@echo "  test-all       - Run all test suites"
 	@echo "  test-compat    - Run compatibility tests (requires C figlet in PATH)"
 	@echo ""

@@ -81,6 +81,28 @@
                             <span class="select-arrow">▼</span>
                         </div>
                     </div>
+
+                    <div class="control-group">
+                        <label for="parser-select">Output</label>
+                        <div class="select-wrapper">
+                            <select id="parser-select">
+                                <option value="terminal">Terminal</option>
+                                <option value="terminal-color">Terminal (Colors)</option>
+                                <option value="html">HTML</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="colors-input">Colors</label>
+                        <input 
+                            type="text" 
+                            id="colors-input" 
+                            placeholder="red;green;blue or FF0000;00FF00"
+                            title="Separate colors with semicolon. Use color names (red, green, etc.) or hex codes (FF0000, 00FF00, etc.)"
+                        >
+                    </div>
                 </div>
             </div>
 
