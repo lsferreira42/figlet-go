@@ -40,6 +40,7 @@ build-wasm:
 	$(call CHECK_TOOL,$(GO))
 	@echo "Building WebAssembly module..."
 	GOOS=js GOARCH=wasm $(GO) build -o $(WASM_OUT) $(WASM_SRC)
+	cp "$$(find "$$($(GO) env GOROOT)" -name wasm_exec.js | head -n 1)" website/
 	@echo "Build complete: $(WASM_OUT)"
 
 # Build everything for website
@@ -145,7 +146,7 @@ test-chkfont: build-chkfont
 test-npm: build-wasm
 	$(call CHECK_TOOL,$(NPM))
 	@echo "Running npm test suite..."
-	cd npm && $(NPM) test
+	cd npm && $(NPM) install && $(NPM) run build && $(NPM) test
 
 # Run compatibility tests against C version (requires figlet in PATH)
 test-compat: build
