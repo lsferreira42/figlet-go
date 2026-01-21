@@ -141,6 +141,12 @@ test-chkfont: build-chkfont
 	@echo "Running chkfont test suite..."
 	./run-chkfont-tests.sh
 
+# Run npm test suite
+test-npm: build-wasm
+	$(call CHECK_TOOL,$(NPM))
+	@echo "Running npm test suite..."
+	cd npm && $(NPM) test
+
 # Run compatibility tests against C version (requires figlet in PATH)
 test-compat: build
 	@echo "Running compatibility tests..."

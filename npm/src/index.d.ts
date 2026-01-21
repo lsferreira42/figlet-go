@@ -21,39 +21,51 @@ export interface ListFontsResult {
 export interface FigletInstance {
     /**
      * Render text with the current font
-     */
     render(text: string): RenderResult;
-    
-    /**
-     * Render text with a specific font
-     */
     renderWithFont(text: string, font: string): RenderResult;
-    
-    /**
-     * Set the current font
-     */
     setFont(font: string): FontResult;
-    
-    /**
-     * List available fonts
-     */
     listFonts(): ListFontsResult;
-    
-    /**
-     * Get the FIGlet version
-     */
     getVersion(): string;
-    
-    /**
-     * Set the output width
-     */
     setWidth(width: number): boolean;
-    
+    setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean;
+    setColors(colors: string[]): boolean;
     /**
-     * Set text justification
-     * @param align -1 = auto, 0 = left, 1 = center, 2 = right
+     * Set output parser
+     * @param parser Parser name (terminal, terminal-color, html)
      */
-    setJustification(align: number): boolean;
+    setParser(parser: string): boolean;
+
+    /**
+     * Set smush mode
+     * @param mode Smush mode (0=kerning, -1=full width, 1+=smushing)
+     */
+    setSmushMode(mode: number): boolean;
+
+    /**
+     * Set right-to-left mode
+     * @param mode 0 = left, 1 = right, -1 = auto
+     */
+    setRightToLeft(mode: number): boolean;
+
+    /**
+     * Enable/disable paragraph mode
+     */
+    setParagraph(enabled: boolean): boolean;
+
+    /**
+     * Enable/disable deutsch flag
+     */
+    setDeutsch(enabled: boolean): boolean;
+
+    /**
+     * Add a control file
+     */
+    addControlFile(name: string): boolean;
+
+    /**
+     * Clear all control files
+     */
+    clearControlFiles(): boolean;
 }
 
 export interface CreateInstanceOptions {
@@ -63,6 +75,18 @@ export interface CreateInstanceOptions {
     width?: number;
     /** Text justification */
     justification?: 'left' | 'center' | 'right' | 'auto';
+    /** Output colors */
+    colors?: string[];
+    /** Output parser */
+    parser?: string;
+    /** Smush mode */
+    smushMode?: number;
+    /** Right-to-left mode */
+    rightToLeft?: number;
+    /** Paragraph mode */
+    paragraph?: boolean;
+    /** Deutsch flag */
+    deutsch?: boolean;
 }
 
 /**

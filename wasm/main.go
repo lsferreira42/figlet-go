@@ -1,32 +1,94 @@
-//go:build js && wasm
-// +build js,wasm
-
 package main
 
 import (
+	"sync"
 	"syscall/js"
 
 	"github.com/lsferreira42/figlet-go/figlet"
 )
 
-var cfg *figlet.Config
-var initError error
+var (
+	configs = make(map[int]*figlet.Config)
+	nextID  = 1
+	mu      sync.Mutex
+)
 
-func init() {
-	cfg = figlet.New()
-	// Load the default font (standard)
-	initError = cfg.LoadFont()
-}
+// loadFont loads the font and keeps config values that might be overwritten
+func loadFont(cfg *figlet.Config) error {
+	// Preserve settings that might be overwritten by LoadFont
+	smushMode := cfg.Smushmode
+	smushOverride := cfg.Smushoverride
+	right2left := cfg.Right2left
+	justification := cfg.Justification
+	paragraph := cfg.Paragraphflag
+	deutsch := cfg.Deutschflag
 
-// render renders text with the current font
-func render(this js.Value, args []js.Value) interface{} {
-	if initError != nil {
-		return map[string]interface{}{
-			"error":  "font not loaded: " + initError.Error(),
-			"result": "",
-		}
+	if err := cfg.LoadFont(); err != nil {
+		return err
 	}
 
+	// Restore settings only if they were explicitly changed from defaults
+	if smushOverride != figlet.SMO_NO {
+		cfg.Smushmode = smushMode
+		cfg.Smushoverride = smushOverride
+	}
+	if right2left != -1 {
+		cfg.Right2left = right2left
+	}
+	if justification != -1 {
+		cfg.Justification = justification
+	}
+	cfg.Paragraphflag = paragraph
+	cfg.Deutschflag = deutsch
+
+	return nil
+}
+
+func init() {
+	mu.Lock()
+	defer mu.Unlock()
+	cfg := figlet.New()
+	configs[0] = cfg
+	// Load the default font (standard)
+	loadFont(cfg)
+}
+
+// getConfig gets a config by handle or return the default if not a number
+func getConfig(args []js.Value) (*figlet.Config, []js.Value) {
+	if len(args) > 0 && args[0].Type() == js.TypeNumber {
+		id := args[0].Int()
+		mu.Lock()
+		defer mu.Unlock()
+		if cfg, ok := configs[id]; ok {
+			return cfg, args[1:]
+		}
+	}
+	return configs[0], args
+}
+
+// createInstance creates a new FIGlet instance and returns its handle
+func createInstance(this js.Value, args []js.Value) interface{} {
+	mu.Lock()
+	defer mu.Unlock()
+	id := nextID
+	nextID++
+	cfg := figlet.New()
+	configs[id] = cfg
+	if err := loadFont(cfg); err != nil {
+		return map[string]interface{}{
+			"error":  err.Error(),
+			"handle": -1,
+		}
+	}
+	return map[string]interface{}{
+		"error":  nil,
+		"handle": id,
+	}
+}
+
+// render renders text
+func render(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":  "text argument required",
@@ -45,6 +107,7 @@ func render(this js.Value, args []js.Value) interface{} {
 
 // renderWithFont renders text with a specific font
 func renderWithFont(this js.Value, args []js.Value) interface{} {
+	_, args = getConfig(args)
 	if len(args) < 2 {
 		return map[string]interface{}{
 			"error":  "text and font arguments required",
@@ -71,6 +134,7 @@ func renderWithFont(this js.Value, args []js.Value) interface{} {
 
 // setFont sets the current font
 func setFont(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":   "font name required",
@@ -81,7 +145,7 @@ func setFont(this js.Value, args []js.Value) interface{} {
 	fontName := args[0].String()
 	cfg.Fontname = fontName
 
-	if err := cfg.LoadFont(); err != nil {
+	if err := loadFont(cfg); err != nil {
 		return map[string]interface{}{
 			"error":   err.Error(),
 			"success": false,
@@ -123,6 +187,7 @@ func getVersion(this js.Value, args []js.Value) interface{} {
 
 // setWidth sets the output width
 func setWidth(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":   "width argument required",
@@ -139,7 +204,7 @@ func setWidth(this js.Value, args []js.Value) interface{} {
 
 	cfg.Outputwidth = width
 	// Reload font to recalculate internal buffers with new width
-	if err := cfg.LoadFont(); err != nil {
+	if err := loadFont(cfg); err != nil {
 		return map[string]interface{}{
 			"error":   err.Error(),
 			"success": false,
@@ -153,8 +218,8 @@ func setWidth(this js.Value, args []js.Value) interface{} {
 }
 
 // setJustification sets text justification
-// 0 = left, 1 = center, 2 = right, -1 = auto
 func setJustification(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":   "justification argument required",
@@ -169,8 +234,8 @@ func setJustification(this js.Value, args []js.Value) interface{} {
 }
 
 // setColors sets colors for rendering
-// Accepts an array of color strings (e.g., ["red", "green", "blue"] or ["FF0000", "00FF00"])
 func setColors(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":   "colors array required",
@@ -195,7 +260,6 @@ func setColors(this js.Value, args []js.Value) interface{} {
 			continue
 		}
 
-		// Try predefined color names first
 		var color figlet.Color
 		switch colorStr {
 		case "black":
@@ -215,7 +279,6 @@ func setColors(this js.Value, args []js.Value) interface{} {
 		case "white":
 			color = figlet.ColorWhite
 		default:
-			// Try to parse as hex color
 			tc, err := figlet.NewTrueColorFromHexString(colorStr)
 			if err != nil {
 				return map[string]interface{}{
@@ -229,7 +292,6 @@ func setColors(this js.Value, args []js.Value) interface{} {
 	}
 
 	cfg.Colors = colors
-	// If colors are set, default to terminal-color parser if not already set
 	if len(colors) > 0 && (cfg.OutputParser == nil || cfg.OutputParser.Name == "terminal") {
 		parser, _ := figlet.GetParser("terminal-color")
 		cfg.OutputParser = parser
@@ -242,8 +304,8 @@ func setColors(this js.Value, args []js.Value) interface{} {
 }
 
 // setParser sets the output parser
-// Accepts: "terminal", "terminal-color", or "html"
 func setParser(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
 	if len(args) < 1 {
 		return map[string]interface{}{
 			"error":   "parser name required",
@@ -267,26 +329,138 @@ func setParser(this js.Value, args []js.Value) interface{} {
 	}
 }
 
-func main() {
-	c := make(chan struct{}, 0)
+// setSmushMode sets the smush mode
+func setSmushMode(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error":   "smush mode argument required",
+			"success": false,
+		}
+	}
+	mode := args[0].Int()
+	if mode < -1 {
+		cfg.Smushoverride = figlet.SMO_NO
+	} else if mode == 0 {
+		cfg.Smushmode = figlet.SM_KERN
+		cfg.Smushoverride = figlet.SMO_YES
+	} else if mode == -1 {
+		cfg.Smushmode = 0
+		cfg.Smushoverride = figlet.SMO_YES
+	} else {
+		cfg.Smushmode = (mode & 63) | figlet.SM_SMUSH
+		cfg.Smushoverride = figlet.SMO_YES
+	}
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
 
+// setRightToLeft sets the right-to-left mode
+func setRightToLeft(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error":   "right2left argument required",
+			"success": false,
+		}
+	}
+	cfg.Right2left = args[0].Int()
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
+
+// setParagraphMode sets the paragraph mode
+func setParagraphMode(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error":   "paragraph flag argument required",
+			"success": false,
+		}
+	}
+	cfg.Paragraphflag = args[0].Bool()
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
+
+// setDeutschFlag sets the deutsch flag
+func setDeutschFlag(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error":   "deutsch flag argument required",
+			"success": false,
+		}
+	}
+	cfg.Deutschflag = args[0].Bool()
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
+
+// addControlFile adds a control file
+func addControlFile(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error":   "control file name required",
+			"success": false,
+		}
+	}
+	name := args[0].String()
+	cfg.AddControlFile(name)
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
+
+// clearControlFiles clears all control files
+func clearControlFiles(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	cfg.ClearControlFiles()
+	return map[string]interface{}{
+		"error":   nil,
+		"success": true,
+	}
+}
+
+func main() {
 	// Register functions to be called from JavaScript
 	js.Global().Set("figlet", js.ValueOf(map[string]interface{}{
-		"render":           js.FuncOf(render),
-		"renderWithFont":   js.FuncOf(renderWithFont),
-		"setFont":          js.FuncOf(setFont),
-		"listFonts":        js.FuncOf(listFonts),
-		"getVersion":       js.FuncOf(getVersion),
-		"setWidth":         js.FuncOf(setWidth),
-		"setJustification": js.FuncOf(setJustification),
-		"setColors":        js.FuncOf(setColors),
-		"setParser":        js.FuncOf(setParser),
+		"createInstance":    js.FuncOf(createInstance),
+		"render":            js.FuncOf(render),
+		"renderWithFont":    js.FuncOf(renderWithFont),
+		"setFont":           js.FuncOf(setFont),
+		"listFonts":         js.FuncOf(listFonts),
+		"getVersion":        js.FuncOf(getVersion),
+		"setWidth":          js.FuncOf(setWidth),
+		"setJustification":  js.FuncOf(setJustification),
+		"setColors":         js.FuncOf(setColors),
+		"setParser":         js.FuncOf(setParser),
+		"setSmushMode":      js.FuncOf(setSmushMode),
+		"setRightToLeft":    js.FuncOf(setRightToLeft),
+		"setParagraph":      js.FuncOf(setParagraphMode),
+		"setDeutsch":        js.FuncOf(setDeutschFlag),
+		"addControlFile":    js.FuncOf(addControlFile),
+		"clearControlFiles": js.FuncOf(clearControlFiles),
 	}))
 
-	// Signal that WASM is ready
-	js.Global().Get("document").Call("dispatchEvent",
-		js.Global().Get("CustomEvent").New("figlet-ready"))
+	// Signal that WASM is ready in browser environment
+	doc := js.Global().Get("document")
+	if !doc.IsUndefined() {
+		doc.Call("dispatchEvent",
+			js.Global().Get("CustomEvent").New("figlet-ready"))
+	}
 
 	// Keep the program running
+	c := make(chan struct{})
 	<-c
 }

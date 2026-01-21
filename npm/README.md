@@ -81,6 +81,19 @@ const result = fig.render('Hello');
 console.log(result.result);
 ```
 
+#### Multi-Instance Support
+
+Each instance created with `createInstance` is fully isolated. This means you can maintain different configurations (font, width, smush modes, etc.) simultaneously without interference.
+
+```javascript
+const fig1 = await figlet.createInstance({ font: 'standard', deutsch: false });
+const fig2 = await figlet.createInstance({ font: 'standard', deutsch: true });
+
+// [ will render differently in each instance
+console.log(fig1.render('[').result);
+console.log(fig2.render('[').result);
+```
+
 #### Options
 
 | Option | Type | Description |
@@ -88,6 +101,30 @@ console.log(result.result);
 | `font` | `string` | Font name to use |
 | `width` | `number` | Output width (default: 80) |
 | `justification` | `'left' \| 'center' \| 'right' \| 'auto'` | Text alignment |
+| `colors` | `string[]` | Array of color names or hex codes (requires HTML parser) |
+| `parser` | `'terminal' \| 'terminal-color' \| 'html'` | Output format |
+| `smushMode` | `number` | Smushing mode (0: kerning, -1: full width, 1-63: smushing) |
+| `rightToLeft` | `number` | Text direction (0: left, 1: right, -1: auto) |
+| `paragraph` | `boolean` | Enable paragraph mode |
+| `deutsch` | `boolean` | Enable Deutsch character mapping (`[` -> `Ä`, etc.) |
+
+### `FigletInstance` Methods
+
+All instance methods return a boolean indicating success, except `render`, `renderWithFont`, `listFonts`, and `getVersion`.
+
+- `render(text: string): RenderResult`
+- `renderWithFont(text: string, font: string): RenderResult`
+- `setFont(font: string): FontResult`
+- `setWidth(width: number): boolean`
+- `setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean`
+- `setColors(colors: string[]): boolean`
+- `setParser(parser: string): boolean`
+- `setSmushMode(mode: number): boolean`
+- `setRightToLeft(mode: number): boolean`
+- `setParagraph(enabled: boolean): boolean`
+- `setDeutsch(enabled: boolean): boolean`
+- `addControlFile(name: string): boolean`
+- `clearControlFiles(): boolean`
 
 ## Available Fonts
 
@@ -163,6 +200,23 @@ This package uses WebAssembly compiled from Go, providing:
 - **Fast rendering**: Native-speed text generation
 - **146 fonts**: All fonts from figlet.org embedded
 - **Consistent output**: Same results across all platforms
+- **Multi-Instance**: Isolated configurations for concurrent use
+
+## Development
+
+### Running Tests
+
+To run the test suite, you need to have Node.js and Go installed.
+
+```bash
+# Run from the root directory
+make test-npm
+
+# Or from the npm directory
+cd npm
+npm install
+npm test
+```
 
 ## Links
 

@@ -26,15 +26,16 @@ jobs:
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           distribution: goreleaser
           version: latest
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Build AppImage
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           chmod +x packages/appimage/build-appimage.sh
           ./packages/appimage/build-appimage.sh ${{ github.ref_name }}
@@ -42,9 +43,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload AppImage to Release
-        uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
         with:
           files: packages/appimage/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify all packages were created
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "Verifying packages created by GoReleaser..."
+          ls -lh dist/*.deb dist/*.rpm dist/*.apk dist/*.pkg.tar.zst dist/*.tar.gz dist/checksums.txt 2>/dev/null || true
+          echo ""
+          echo "Packages summary:"
+          echo "- DEB packages: $(ls -1 dist/*.deb 2>/dev/null | wc -l)"
+          echo "- RPM packages: $(ls -1 dist/*.rpm 2>/dev/null | wc -l)"
+          echo "- APK packages: $(ls -1 dist/*.apk 2>/dev/null | wc -l)"
+          echo "- Arch packages: $(ls -1 dist/*.pkg.tar.zst 2>/dev/null | wc -l)"
+          echo "- TAR.GZ archives: $(ls -1 dist/*.tar.gz 2>/dev/null | wc -l)"
+          echo "- AppImage: $(ls -1 packages/appimage/*.AppImage 2>/dev/null | wc -l)"

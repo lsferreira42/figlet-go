@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.js",
+    "test": "jest",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -46,6 +47,10 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
-    "esbuild": "^0.20.0"
+    "@types/jest": "^30.0.0",
+    "esbuild": "^0.20.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2"
   }
 }

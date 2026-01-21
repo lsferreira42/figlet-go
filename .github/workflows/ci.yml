@@ -245,3 +245,30 @@ jobs:
         with:
           name: figlet-wasm
           path: website/
+
+  test-npm:
+    name: Test NPM Package
+    runs-on: ubuntu-latest
+    needs: wasm-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: npm/package-lock.json
+
+      - name: Install dependencies
+        run: cd npm && npm install
+
+      - name: Run NPM tests
+        run: make test-npm

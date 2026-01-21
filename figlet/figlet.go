@@ -47,7 +47,7 @@ const (
 )
 
 var (
-	deutsch = []rune{196, 214, 220, 228, 246, 252, 223}
+	Deutsch = []rune{196, 214, 220, 228, 246, 252, 223}
 )
 
 // FCharNode represents a character in the font
@@ -341,9 +341,9 @@ func (cfg *Config) RenderString(text string) string {
 
 		if cfg.Deutschflag {
 			if c >= '[' && c <= ']' {
-				c = deutsch[c-'[']
+				c = Deutsch[c-'[']
 			} else if c >= '{' && c <= '~' {
-				c = deutsch[c-'{'+3]
+				c = Deutsch[c-'{'+3]
 			}
 		}
 
@@ -1135,7 +1135,7 @@ func readfont(cfg *Config) error {
 		readfontchar(cfg, fontfile, theord)
 	}
 	for i := 0; i <= 6; i++ {
-		readfontchar(cfg, fontfile, deutsch[i])
+		readfontchar(cfg, fontfile, Deutsch[i])
 	}
 
 	fileline = make([]byte, maxlen+1)

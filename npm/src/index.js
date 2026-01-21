@@ -118,33 +118,147 @@ async function getVersion() {
     return fig.getVersion();
 }
 
+class FIGlet {
+    constructor(wasm, handle) {
+        this.wasm = wasm;
+        this.handle = handle;
+    }
+
+    render(text) {
+        return this.wasm.render(this.handle, text);
+    }
+
+    renderWithFont(text, font) {
+        return this.wasm.renderWithFont(this.handle, text, font);
+    }
+
+    setFont(font) {
+        return this.wasm.setFont(this.handle, font);
+    }
+
+    listFonts() {
+        return this.wasm.listFonts();
+    }
+
+    getVersion() {
+        return this.wasm.getVersion();
+    }
+
+    setWidth(width) {
+        const result = this.wasm.setWidth(this.handle, width);
+        return result.success;
+    }
+
+    setJustification(align) {
+        const alignMap = { auto: -1, left: 0, center: 1, right: 2 };
+        const result = this.wasm.setJustification(this.handle, alignMap[align]);
+        return result.success;
+    }
+
+    setColors(colors) {
+        const result = this.wasm.setColors(this.handle, colors);
+        return result.success;
+    }
+
+    setParser(parser) {
+        const result = this.wasm.setParser(this.handle, parser);
+        return result.success;
+    }
+
+    setSmushMode(mode) {
+        const result = this.wasm.setSmushMode(this.handle, mode);
+        return result.success;
+    }
+
+    setRightToLeft(mode) {
+        const result = this.wasm.setRightToLeft(this.handle, mode);
+        return result.success;
+    }
+
+    setParagraph(enabled) {
+        const result = this.wasm.setParagraph(this.handle, enabled);
+        return result.success;
+    }
+
+    setDeutsch(enabled) {
+        const result = this.wasm.setDeutsch(this.handle, enabled);
+        return result.success;
+    }
+
+    addControlFile(name) {
+        const result = this.wasm.addControlFile(this.handle, name);
+        return result.success;
+    }
+
+    clearControlFiles() {
+        const result = this.wasm.clearControlFiles(this.handle);
+        return result.success;
+    }
+}
+
 /**
  * Create a configured FIGlet instance
  * @param {object} [options] - Configuration options
  * @param {string} [options.font] - Font name
  * @param {number} [options.width] - Output width
  * @param {'left'|'center'|'right'|'auto'} [options.justification] - Text alignment
+ * @param {string[]} [options.colors] - Array of color names or hex strings
+ * @param {string} [options.parser] - Parser name (terminal, terminal-color, html)
+ * @param {number} [options.smushMode] - Smush mode (0=kerning, -1=full width, 1+=smushing)
+ * @param {number} [options.rightToLeft] - Right-to-left mode (0=left, 1=right, -1=auto)
+ * @param {boolean} [options.paragraph] - Paragraph mode
+ * @param {boolean} [options.deutsch] - Deutsch mode
  * @returns {Promise<object>} - Configured FIGlet instance
  */
 async function createInstance(options = {}) {
-    const fig = await init();
-    
+    const wasm = await init();
+    const result = wasm.createInstance();
+
+    if (result.error) {
+        throw new Error(result.error);
+    }
+
+    const fig = new FIGlet(wasm, result.handle);
+
     if (options.font) {
-        const result = fig.setFont(options.font);
-        if (result.error) {
-            throw new Error(result.error);
+        const res = fig.setFont(options.font);
+        if (res.error) {
+            throw new Error(res.error);
         }
     }
-    
+
     if (options.width) {
         fig.setWidth(options.width);
     }
-    
+
     if (options.justification) {
-        const alignMap = { auto: -1, left: 0, center: 1, right: 2 };
-        fig.setJustification(alignMap[options.justification]);
+        fig.setJustification(options.justification);
     }
-    
+
+    if (options.colors) {
+        fig.setColors(options.colors);
+    }
+
+    if (options.parser) {
+        fig.setParser(options.parser);
+    }
+
+    if (options.smushMode !== undefined) {
+        fig.setSmushMode(options.smushMode);
+    }
+
+    if (options.rightToLeft !== undefined) {
+        fig.setRightToLeft(options.rightToLeft);
+    }
+
+    if (options.paragraph !== undefined) {
+        fig.setParagraph(options.paragraph);
+    }
+
+    if (options.deutsch !== undefined) {
+        fig.setDeutsch(options.deutsch);
+    }
+
     return fig;
 }
 

@@ -23,6 +23,7 @@ export interface ListFontsResult {
     fonts: string[];
 }
 
+// Public API interface
 export interface FigletInstance {
     render(text: string): RenderResult;
     renderWithFont(text: string, font: string): RenderResult;
@@ -30,21 +31,49 @@ export interface FigletInstance {
     listFonts(): ListFontsResult;
     getVersion(): string;
     setWidth(width: number): boolean;
-    setJustification(align: number): boolean;
+    setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean;
+    setColors(colors: string[]): boolean;
+    setParser(parser: string): boolean;
+    setSmushMode(mode: number): boolean;
+    setRightToLeft(mode: number): boolean;
+    setParagraph(enabled: boolean): boolean;
+    setDeutsch(enabled: boolean): boolean;
+    addControlFile(name: string): boolean;
+    clearControlFiles(): boolean;
+}
+
+// Internal WASM bridge interface
+interface WasmFiglet {
+    createInstance(): { error: string | null; handle: number };
+    render(handle: number, text: string): RenderResult;
+    renderWithFont(handle: number, text: string, font: string): RenderResult;
+    setFont(handle: number, font: string): FontResult;
+    listFonts(): ListFontsResult;
+    getVersion(): string;
+    setWidth(handle: number, width: number): { success: boolean };
+    setJustification(handle: number, align: number): { success: boolean };
+    setColors(handle: number, colors: string[]): { success: boolean };
+    setParser(handle: number, parser: string): { success: boolean };
+    setSmushMode(handle: number, mode: number): { success: boolean };
+    setRightToLeft(handle: number, mode: number): { success: boolean };
+    setParagraph(handle: number, enabled: boolean): { success: boolean };
+    setDeutsch(handle: number, enabled: boolean): { success: boolean };
+    addControlFile(handle: number, name: string): { success: boolean };
+    clearControlFiles(handle: number): { success: boolean };
 }
 
 declare global {
-    var figlet: FigletInstance | undefined;
+    var figlet: WasmFiglet | undefined;
     var Go: any;
 }
 
-let instance: FigletInstance | null = null;
-let initPromise: Promise<FigletInstance> | null = null;
+let instance: WasmFiglet | null = null;
+let initPromise: Promise<WasmFiglet> | null = null;
 
 /**
  * Initialize the FIGlet WASM module
  */
-export async function init(wasmPath?: string): Promise<FigletInstance> {
+export async function init(wasmPath?: string): Promise<WasmFiglet> {
     if (instance) {
         return instance;
     }
@@ -110,8 +139,8 @@ export async function init(wasmPath?: string): Promise<FigletInstance> {
  * Render text with the default font
  */
 export async function render(text: string): Promise<string> {
-    const fig = await init();
-    const result = fig.render(text);
+    const wasm = await init();
+    const result = wasm.render(0, text);
     if (result.error) {
         throw new Error(result.error);
     }
@@ -122,8 +151,8 @@ export async function render(text: string): Promise<string> {
  * Render text with a specific font
  */
 export async function renderWithFont(text: string, font: string): Promise<string> {
-    const fig = await init();
-    const result = fig.renderWithFont(text, font);
+    const wasm = await init();
+    const result = wasm.renderWithFont(0, text, font);
     if (result.error) {
         throw new Error(result.error);
     }
@@ -150,6 +179,87 @@ export async function getVersion(): Promise<string> {
     return fig.getVersion();
 }
 
+class FIGlet implements FigletInstance {
+    private handle: number;
+    private wasm: WasmFiglet;
+
+    constructor(wasm: WasmFiglet, handle: number) {
+        this.wasm = wasm;
+        this.handle = handle;
+    }
+
+    render(text: string): RenderResult {
+        return this.wasm.render(this.handle, text);
+    }
+
+    renderWithFont(text: string, font: string): RenderResult {
+        return this.wasm.renderWithFont(this.handle, text, font);
+    }
+
+    setFont(font: string): FontResult {
+        return this.wasm.setFont(this.handle, font);
+    }
+
+    listFonts(): ListFontsResult {
+        return this.wasm.listFonts();
+    }
+
+    getVersion(): string {
+        return this.wasm.getVersion();
+    }
+
+    setWidth(width: number): boolean {
+        const result = this.wasm.setWidth(this.handle, width);
+        return result.success;
+    }
+
+    setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean {
+        const alignMap = { auto: -1, left: 0, center: 1, right: 2 };
+        const result = this.wasm.setJustification(this.handle, alignMap[align]);
+        return result.success;
+    }
+
+    setColors(colors: string[]): boolean {
+        const result = this.wasm.setColors(this.handle, colors);
+        return result.success;
+    }
+
+    setParser(parser: string): boolean {
+        const result = this.wasm.setParser(this.handle, parser);
+        return result.success;
+    }
+
+    setSmushMode(mode: number): boolean {
+        const result = this.wasm.setSmushMode(this.handle, mode);
+        return result.success;
+    }
+
+    setRightToLeft(mode: number): boolean {
+        const result = this.wasm.setRightToLeft(this.handle, mode);
+        return result.success;
+    }
+
+    setParagraph(enabled: boolean): boolean {
+        const result = this.wasm.setParagraph(this.handle, enabled);
+        return result.success;
+    }
+
+    setDeutsch(enabled: boolean): boolean {
+        const result = this.wasm.setDeutsch(this.handle, enabled);
+        return result.success;
+    }
+
+    addControlFile(name: string): boolean {
+        const result = this.wasm.addControlFile(this.handle, name);
+        return result.success;
+    }
+
+    clearControlFiles(): boolean {
+        const result = this.wasm.clearControlFiles(this.handle);
+        return result.success;
+    }
+}
+
 /**
  * Create a configured FIGlet instance
  */
@@ -157,25 +267,61 @@ export async function createInstance(options?: {
     font?: string;
     width?: number;
     justification?: 'left' | 'center' | 'right' | 'auto';
+    colors?: string[];
+    parser?: string;
+    smushMode?: number;
+    rightToLeft?: number;
+    paragraph?: boolean;
+    deutsch?: boolean;
 }): Promise<FigletInstance> {
-    const fig = await init();
-    
+    const wasm = await init();
+    const result = wasm.createInstance();
+
+    if (result.error) {
+        throw new Error(result.error);
+    }
+
+    const fig = new FIGlet(wasm, result.handle);
+
     if (options?.font) {
-        const result = fig.setFont(options.font);
-        if (result.error) {
-            throw new Error(result.error);
+        const res = fig.setFont(options.font);
+        if (res.error) {
+            throw new Error(res.error);
         }
     }
-    
+
     if (options?.width) {
         fig.setWidth(options.width);
     }
-    
+
     if (options?.justification) {
-        const alignMap = { auto: -1, left: 0, center: 1, right: 2 };
-        fig.setJustification(alignMap[options.justification]);
+        fig.setJustification(options.justification);
     }
-    
+
+    if (options?.colors) {
+        fig.setColors(options.colors);
+    }
+
+    if (options?.parser) {
+        fig.setParser(options.parser);
+    }
+
+    if (options?.smushMode !== undefined) {
+        fig.setSmushMode(options.smushMode);
+    }
+
+    if (options?.rightToLeft !== undefined) {
+        fig.setRightToLeft(options.rightToLeft);
+    }
+
+    if (options?.paragraph !== undefined) {
+        fig.setParagraph(options.paragraph);
+    }
+
+    if (options?.deutsch !== undefined) {
+        fig.setDeutsch(options.deutsch);
+    }
+
     return fig;
 }
 
