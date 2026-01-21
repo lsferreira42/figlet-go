@@ -117,8 +117,10 @@ echo "" | tee -a "$LOGFILE"
 
 if [ $failed -eq 0 ]; then
     echo "✓ Todos os testes passaram!" | tee -a "$LOGFILE"
+    echo "SUMMARY: PASSED=$passed, FAILED=$failed, TOTAL=$total"
     exit 0
 else
     echo "✗ $failed teste(s) falharam. Veja $LOGFILE para detalhes." | tee -a "$LOGFILE"
+    echo "SUMMARY: PASSED=$passed, FAILED=$failed, TOTAL=$total"
     exit 1
 fi

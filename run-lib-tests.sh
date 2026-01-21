@@ -85,11 +85,27 @@ fi
 
 # Summary
 echo "=========================================" | tee -a "$LOGFILE"
+
+# Extract counts from log if possible (Go test output is tricky but we can try)
+# Typical output: PASS: TestName (0.01s)
+passed_count=$(grep -c "^PASS: " "$LOGFILE")
+failed_count=$(grep -c "^FAIL: " "$LOGFILE")
+
 if [ $result -eq 0 ]; then
     echo "✓ All library tests passed!" | tee -a "$LOGFILE"
+    # If standard go test didn't output individual passes, at least we know it passed
+    if [ "$passed_count" -eq 0 ] && [ "$failed_count" -eq 0 ]; then
+        passed_count=1
+        total_count=1
+    else
+        total_count=$((passed_count + failed_count))
+    fi
 else
     echo "✗ Some tests failed. See $LOGFILE for details." | tee -a "$LOGFILE"
+    total_count=$((passed_count + failed_count))
+    if [ "$total_count" -eq 0 ]; then total_count=1; fi
 fi
+echo "SUMMARY: PASSED=$passed_count, FAILED=$failed_count, TOTAL=$total_count"
 echo "=========================================" | tee -a "$LOGFILE"
 
 exit $result

@@ -161,8 +161,9 @@ test-output: build
 	@echo "Running output parser tests..."
 	./run-output-tests.sh
 
-test-all: test test-lib test-chkfont test-colors test-output
-	@echo "All tests complete."
+test-all: build build-chkfont build-wasm
+	chmod +x run-all-tests.sh run-npm-tests.sh
+	./run-all-tests.sh
 
 # Run figlet with example text
 run: build

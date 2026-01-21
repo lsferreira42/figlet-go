@@ -93,10 +93,12 @@ run_test() {
 			fail=`expr $fail + 1`
 		fi
 	fi
+	total=`expr $total + 1`
 }
 
 result=0
 fail=0
+total=0
 $CMD -v > $LOGFILE 2>&1
 
 echo "=========================================" | tee -a $LOGFILE
@@ -210,6 +212,8 @@ if [ $result -ne 0 ]; then
 else
 	echo " All output parser tests passed." | tee -a $LOGFILE
 fi
+passed=`expr $total - $fail`
+echo "SUMMARY: PASSED=$passed, FAILED=$fail, TOTAL=$total"
 echo "=========================================" | tee -a $LOGFILE
 
 exit $result

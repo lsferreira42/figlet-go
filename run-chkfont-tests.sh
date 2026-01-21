@@ -130,6 +130,7 @@ run_test "mnemonic.flf" "fonts/mnemonic.flf"
 echo
 echo "======================================"
 echo "Results: $PASSED passed, $FAILED failed"
+echo "SUMMARY: PASSED=$PASSED, FAILED=$FAILED, TOTAL=$((PASSED + FAILED))"
 echo "======================================"
 
 if [ $FAILED -gt 0 ]; then

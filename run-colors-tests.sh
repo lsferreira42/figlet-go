@@ -49,10 +49,12 @@ run_test() {
 			fi
 		fi
 	fi
+	total=`expr $total + 1`
 }
 
 result=0
 fail=0
+total=0
 $CMD -v > $LOGFILE 2>&1
 
 echo "=========================================" | tee -a $LOGFILE
@@ -158,6 +160,8 @@ if [ $result -ne 0 ]; then
 else
 	echo " All color tests passed." | tee -a $LOGFILE
 fi
+passed=`expr $total - $fail`
+echo "SUMMARY: PASSED=$passed, FAILED=$fail, TOTAL=$total"
 echo "=========================================" | tee -a $LOGFILE
 
 exit $result

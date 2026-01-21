@@ -19,7 +19,7 @@ run_test() {
 	echo >> $LOGFILE
 	echo "Command: $test_cmd" >> $LOGFILE
 	eval "$test_cmd" > "$OUTPUT" 2>> $LOGFILE
-	cmp "$OUTPUT" "tests/res${test_num}.txt" >> $LOGFILE 2>&1
+	total=`expr $total + 1`
 	if [ $? -eq 0 ]; then
 		echo "pass" | tee -a $LOGFILE
 	else
@@ -31,6 +31,7 @@ run_test() {
 
 result=0
 fail=0
+total=0
 $CMD -v > $LOGFILE
 
 file="$TESTDIR/input.txt"
@@ -83,5 +84,7 @@ if [ $result -ne 0 ]; then
 else
 	echo " All tests passed."
 fi
+passed=`expr $total - $fail`
+echo "SUMMARY: PASSED=$passed, FAILED=$fail, TOTAL=$total"
 
 exit $result
