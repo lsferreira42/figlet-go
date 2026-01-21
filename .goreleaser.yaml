@@ -10,14 +10,22 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
+      - darwin
+      - windows
     goarch:
       - amd64
       - arm64
     main: figlet.go
     binary: figlet
+    ignore:
+      - goos: darwin
+        goarch: 386
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
     formats:
       - tar.gz
 
