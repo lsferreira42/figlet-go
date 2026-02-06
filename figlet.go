@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/lsferreira42/figlet-go/figlet"
 )
@@ -40,6 +41,8 @@ func printusage(cfg *figlet.Config, out io.Writer) {
 	fmt.Fprintf(out, "              [ -f fontfile ] [ -m smushmode ] [ -w outputwidth ]\n")
 	fmt.Fprintf(out, "              [ -C controlfile ] [ -I infocode ]\n")
 	fmt.Fprintf(out, "              [ --colors color1;color2;... ] [ --parser terminal|terminal-color|html ]\n")
+	fmt.Fprintf(out, "              [ --animation reveal|scroll|rain|wave|explosion ] [ --animation-delay ms ]\n")
+	fmt.Fprintf(out, "              [ --animation-file file ] [ --export file ]\n")
 	fmt.Fprintf(out, "              [ message ]\n")
 }
 
@@ -109,42 +112,50 @@ func getparams(cfg *figlet.Config) {
 			break
 		}
 
-		// Handle long options (--colors, --parser)
+		// Handle long options (--colors, --parser, --animation, etc.)
 		if len(arg) > 2 && arg[0:2] == "--" {
 			if strings.HasPrefix(arg, "--colors=") {
-				colorsStr := arg[9:]
-				colors := parseColors(colorsStr)
-				cfg.Colors = colors
-				// Only auto-switch to terminal-color if parser is still default terminal
-				// Don't override if user explicitly set a parser (like HTML)
-				if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
-					parser, _ := figlet.GetParser("terminal-color")
-					cfg.OutputParser = parser
-				}
+				parseColorsArg(cfg, arg[9:])
 			} else if arg == "--colors" && optind+1 < len(cfg.Argv) {
-				colorsStr := cfg.Argv[optind+1]
-				colors := parseColors(colorsStr)
-				cfg.Colors = colors
-				// Only auto-switch to terminal-color if parser is still default terminal
-				// Don't override if user explicitly set a parser (like HTML)
-				if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
-					parser, _ := figlet.GetParser("terminal-color")
-					cfg.OutputParser = parser
-				}
+				parseColorsArg(cfg, cfg.Argv[optind+1])
+				optind++
+			} else if strings.HasPrefix(arg, "--animation=") {
+				cfg.AnimationType = arg[12:]
+			} else if arg == "--animation" && optind+1 < len(cfg.Argv) {
+				cfg.AnimationType = cfg.Argv[optind+1]
+				optind++
+			} else if strings.HasPrefix(arg, "--animation-file=") {
+				cfg.AnimationFile = arg[17:]
+			} else if arg == "--animation-file" && optind+1 < len(cfg.Argv) {
+				cfg.AnimationFile = cfg.Argv[optind+1]
+				optind++
+			} else if strings.HasPrefix(arg, "--animation-delay=") {
+				val, _ := strconv.Atoi(arg[18:])
+				cfg.AnimationDelay = time.Duration(val) * time.Millisecond
+			} else if arg == "--animation-delay" && optind+1 < len(cfg.Argv) {
+				val, _ := strconv.Atoi(cfg.Argv[optind+1])
+				cfg.AnimationDelay = time.Duration(val) * time.Millisecond
 				optind++
 			} else if strings.HasPrefix(arg, "--parser=") {
-				parserName := arg[9:]
-				parser, err := figlet.GetParser(parserName)
+				parser, err := figlet.GetParser(arg[9:])
 				if err == nil {
 					cfg.OutputParser = parser
 				}
 			} else if arg == "--parser" && optind+1 < len(cfg.Argv) {
-				parserName := cfg.Argv[optind+1]
-				parser, err := figlet.GetParser(parserName)
+				parser, err := figlet.GetParser(cfg.Argv[optind+1])
 				if err == nil {
 					cfg.OutputParser = parser
 				}
 				optind++
+			} else if strings.HasPrefix(arg, "--export=") {
+				cfg.ExportFile = arg[9:]
+			} else if arg == "--export" && optind+1 < len(cfg.Argv) {
+				cfg.ExportFile = cfg.Argv[optind+1]
+				optind++
+			} else {
+				fmt.Fprintf(os.Stderr, "%s: unknown option %s\n", myname, arg)
+				printusage(cfg, os.Stderr)
+				os.Exit(1)
 			}
 			optind++
 			continue
@@ -307,6 +318,18 @@ func getparams(cfg *figlet.Config) {
 	}
 }
 
+// parseColorsArg handles the --colors argument and sets the default parser
+func parseColorsArg(cfg *figlet.Config, colorsStr string) {
+	colors := parseColors(colorsStr)
+	cfg.Colors = colors
+	// Only auto-switch to terminal-color if parser is still default terminal
+	// Don't override if user explicitly set a parser (like HTML)
+	if len(colors) > 0 && cfg.OutputParser != nil && cfg.OutputParser.Name == "terminal" {
+		parser, _ := figlet.GetParser("terminal-color")
+		cfg.OutputParser = parser
+	}
+}
+
 // parseColors parses a color string (e.g., "red;green;blue" or "FF0000;00FF00")
 func parseColors(colorsStr string) []figlet.Color {
 	if colorsStr == "" {
@@ -353,17 +376,20 @@ func parseColors(colorsStr string) []figlet.Color {
 }
 
 func processInput(cfg *figlet.Config) {
+	if cfg.AnimationFile != "" {
+		playAnimationFromFile(cfg.AnimationFile)
+		return
+	}
+
+	text := ""
 	if cfg.Cmdinput && cfg.Optind < len(cfg.Argv) {
 		// Build the text from command line arguments
-		text := ""
 		for i := cfg.Optind; i < len(cfg.Argv); i++ {
 			if i > cfg.Optind {
 				text += " "
 			}
 			text += cfg.Argv[i]
 		}
-		result := cfg.RenderString(text)
-		fmt.Print(result)
 	} else {
 		// Read from stdin
 		var input []byte
@@ -377,9 +403,79 @@ func processInput(cfg *figlet.Config) {
 				break
 			}
 		}
-		if len(input) > 0 {
-			result := cfg.RenderString(string(input))
-			fmt.Print(result)
+		text = string(input)
+	}
+
+	if text == "" {
+		return
+	}
+
+	if cfg.AnimationType != "" {
+		animator := figlet.NewAnimator(cfg)
+		frames, err := animator.GenerateAnimation(text, cfg.AnimationType, cfg.AnimationDelay)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating animation: %v\n", err)
+			os.Exit(1)
+		}
+		if cfg.ExportFile != "" {
+			exportAnimation(frames, cfg.ExportFile)
+		} else {
+			figlet.PlayAnimation(cfg, frames)
+		}
+		return
+	} else {
+		result := cfg.RenderString(text)
+		fmt.Print(result)
+	}
+}
+
+func exportAnimation(frames []figlet.Frame, filename string) {
+	var builder strings.Builder
+	for _, frame := range frames {
+		builder.WriteString(fmt.Sprintf("FRAME %d\n", frame.Delay.Milliseconds()))
+		builder.WriteString(frame.Content)
+		builder.WriteString("END FRAME\n")
+	}
+	err := os.WriteFile(filename, []byte(builder.String()), 0644)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error exporting animation: %v\n", err)
+	}
+}
+
+func playAnimationFromFile(filename string) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading animation file: %v\n", err)
+		return
+	}
+
+	var frames []figlet.Frame
+	lines := strings.Split(string(data), "\n")
+	var currentFrame strings.Builder
+	var currentDelay time.Duration
+	inFrame := false
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "FRAME ") {
+			ms, _ := strconv.Atoi(line[6:])
+			currentDelay = time.Duration(ms) * time.Millisecond
+			currentFrame.Reset()
+			inFrame = true
+			continue
+		}
+		if line == "END FRAME" {
+			frames = append(frames, figlet.Frame{
+				Content: currentFrame.String(),
+				Delay:   currentDelay,
+			})
+			inFrame = false
+			continue
+		}
+		if inFrame {
+			currentFrame.WriteString(line)
+			currentFrame.WriteString("\n")
 		}
 	}
+
+	figlet.PlayAnimation(figlet.New(), frames)
 }

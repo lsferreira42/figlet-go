@@ -20,6 +20,16 @@ const elements = {
     downloadBtn: document.getElementById('download-btn'),
     fontGallery: document.getElementById('font-gallery'),
     toast: document.getElementById('toast'),
+    animationSelect: document.getElementById('animation-select'),
+    animationDelay: document.getElementById('animation-delay'),
+    playBtn: document.getElementById('play-btn'),
+};
+
+const animation = {
+    playing: false,
+    frames: [],
+    currentFrame: 0,
+    timer: null,
 };
 
 // Initialize the WASM module
@@ -232,6 +242,16 @@ function setupEventListeners() {
 
     // Download button
     elements.downloadBtn.addEventListener('click', downloadText);
+
+    // Play button
+    elements.playBtn.addEventListener('click', toggleAnimation);
+
+    // Animation settings changes
+    [elements.animationSelect, elements.animationDelay].forEach(el => {
+        el.addEventListener('change', () => {
+            if (animation.playing) stopAnimation();
+        });
+    });
 }
 
 // Select a font
@@ -256,9 +276,91 @@ function selectFont(fontName) {
     render();
 }
 
+// Toggle Animation
+async function toggleAnimation() {
+    if (animation.playing) {
+        stopAnimation();
+    } else {
+        await startAnimation();
+    }
+}
+
+// Start Animation
+async function startAnimation() {
+    const text = elements.textInput.value || 'Hello';
+    const animType = elements.animationSelect.value;
+    const delay = parseInt(elements.animationDelay.value) || 50;
+
+    if (!animType) {
+        showToast('Please select an animation type', 'info');
+        return;
+    }
+
+    // Prepare UI
+    elements.playBtn.disabled = true;
+    const span = elements.playBtn.querySelector('span');
+    span.textContent = 'Generating...';
+
+    // Small delay to allow UI to update
+    await new Promise(r => setTimeout(r, 10));
+
+    try {
+        const result = figlet.generateAnimation(text, animType, delay);
+        if (result.error) {
+            showToast(`Generating failed: ${result.error}`, 'error');
+            elements.playBtn.disabled = false;
+            span.textContent = 'Play';
+            return;
+        }
+
+        animation.frames = result.frames;
+        animation.currentFrame = 0;
+        animation.playing = true;
+
+        elements.playBtn.disabled = false;
+        elements.playBtn.classList.add('playing');
+        span.textContent = 'Stop';
+
+        playNextFrame();
+    } catch (e) {
+        console.error(e);
+        showToast('Animation failed to start', 'error');
+        elements.playBtn.disabled = false;
+        span.textContent = 'Play';
+    }
+}
+
+// Stop Animation
+function stopAnimation() {
+    animation.playing = false;
+    clearTimeout(animation.timer);
+
+    elements.playBtn.classList.remove('playing');
+    elements.playBtn.querySelector('span').textContent = 'Play';
+
+    render();
+}
+
+// Play Next Frame
+function playNextFrame() {
+    if (!animation.playing) return;
+
+    const frame = animation.frames[animation.currentFrame];
+    const parser = elements.parserSelect.value;
+
+    if (parser === 'html') {
+        elements.output.innerHTML = frame.content;
+    } else {
+        elements.output.textContent = frame.content;
+    }
+
+    animation.currentFrame = (animation.currentFrame + 1) % animation.frames.length;
+    animation.timer = setTimeout(playNextFrame, frame.delay);
+}
+
 // Render the text
 function render() {
-    if (!state.ready) return;
+    if (!state.ready || animation.playing) return;
 
     const text = elements.textInput.value || 'Hello';
     const parser = elements.parserSelect.value;

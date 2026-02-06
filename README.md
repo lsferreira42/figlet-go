@@ -86,6 +86,7 @@ echo "Hello World" | ./figlet-bin
 ```
 
 📖 **[Complete Colors and Output Formats Guide →](colors_outputs.md)**
+📖 **[Animated Figlet Guide →](animation.md)**
 
 Sample output with different fonts:
 
@@ -144,6 +145,10 @@ Usage: figlet [ -cklnoprstvxDELNRSWX ] [ -d fontdirectory ]
 | `-I code` | Display info (0=version, 1=version int, 2=font dir, 3=font name, 4=output width, 5=supported font formats) |
 | `--colors colors` | Set colors for output (e.g., `--colors red;green;blue` or `--colors FF0000;00FF00`) - See [Colors Guide](colors_outputs.md) |
 | `--parser parser` | Set output parser (`terminal`, `terminal-color`, or `html`) - See [Output Formats Guide](colors_outputs.md) |
+| `--animation type` | Set animation type (`reveal`, `scroll`, `rain`, `wave`, `explosion`) - See [Animations Guide](animation.md) |
+| `--animation-delay ms` | Set delay between frames in milliseconds (default: 50ms) |
+| `--export file` | Save animation frames to a file |
+| `--animation-file file` | Play an exported animation file |
 
 ### chkfont
 

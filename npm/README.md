@@ -149,6 +149,28 @@ console.log(art);
 </script>
 ```
 
+## Animation Support
+
+FIGlet-Go supports high-performance animations! You can list available animation types and generate frames directly:
+
+```javascript
+// List available animations
+const animations = await figlet.listAnimations();
+// ['reveal', 'scroll', 'rain', 'wave', 'explosion']
+
+// Generate frames for an animation
+const frames = await figlet.generateAnimation('Hello!', 'wave', 50);
+
+// Each frame contains:
+// - content: The rendered string for this frame
+// - delay: Suggested delay in ms
+// - baselineOffset: Vertical offset for the frame
+console.log(frames[0].content);
+```
+
+### Stable Color Mapping
+All animations support high-fidelity, character-pinned coloring. Characters maintain their colors as they move, ensuring smooth and professional effects.
+坐
 ## TypeScript Support
 
 Full TypeScript definitions are included:

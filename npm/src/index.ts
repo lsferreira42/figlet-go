@@ -29,6 +29,8 @@ export interface FigletInstance {
     renderWithFont(text: string, font: string): RenderResult;
     setFont(font: string): FontResult;
     listFonts(): ListFontsResult;
+    listAnimations(): { error: string | null; animations: string[] };
+    generateAnimation(text: string, animation?: string, delay?: number): { error: string | null; frames: any[] };
     getVersion(): string;
     setWidth(width: number): boolean;
     setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean;
@@ -60,6 +62,8 @@ interface WasmFiglet {
     setDeutsch(handle: number, enabled: boolean): { success: boolean };
     addControlFile(handle: number, name: string): { success: boolean };
     clearControlFiles(handle: number): { success: boolean };
+    listAnimations(): { error: string | null; animations: string[] };
+    generateAnimation(handle: number, text: string, animation: string, delay: number): { error: string | null; frames: any[] };
 }
 
 declare global {
@@ -172,6 +176,30 @@ export async function listFonts(): Promise<string[]> {
 }
 
 /**
+ * List available animations
+ */
+export async function listAnimations(): Promise<string[]> {
+    const fig = await init();
+    const result = fig.listAnimations();
+    if (result.error) {
+        throw new Error(result.error);
+    }
+    return result.animations;
+}
+
+/**
+ * Generate animation frames
+ */
+export async function generateAnimation(text: string, animation: string = 'reveal', delay: number = 50): Promise<any[]> {
+    const fig = await init();
+    const result = fig.generateAnimation(0, text, animation, delay);
+    if (result.error) {
+        throw new Error(result.error);
+    }
+    return result.frames;
+}
+
+/**
  * Get the FIGlet version
  */
 export async function getVersion(): Promise<string> {
@@ -204,6 +232,14 @@ class FIGlet implements FigletInstance {
         return this.wasm.listFonts();
     }
 
+    listAnimations(): { error: string | null; animations: string[] } {
+        return this.wasm.listAnimations();
+    }
+
+    generateAnimation(text: string, animation: string = 'reveal', delay: number = 50): { error: string | null; frames: any[] } {
+        return this.wasm.generateAnimation(this.handle, text, animation, delay);
+    }
+
     getVersion(): string {
         return this.wasm.getVersion();
     }
@@ -214,7 +250,7 @@ class FIGlet implements FigletInstance {
     }
 
     setJustification(align: 'left' | 'center' | 'right' | 'auto'): boolean {
-        const alignMap = { auto: -1, left: 0, center: 1, right: 2 };
+        const alignMap = { auto: -1, left: 0, center: 1, right: 2 } as const;
         const result = this.wasm.setJustification(this.handle, alignMap[align]);
         return result.success;
     }
@@ -331,6 +367,8 @@ export default {
     render,
     renderWithFont,
     listFonts,
+    listAnimations,
+    generateAnimation,
     getVersion,
     createInstance,
 };
