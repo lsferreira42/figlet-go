@@ -1,6 +1,6 @@
 {
   "name": "figlet-go",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "FIGlet ASCII art text generator - WebAssembly module compiled from Go",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

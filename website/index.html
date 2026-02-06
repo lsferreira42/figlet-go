@@ -104,6 +104,44 @@
                             title="Separate colors with semicolon. Use color names (red, green, etc.) or hex codes (FF0000, 00FF00, etc.)"
                         >
                     </div>
+
+                    <div class="divider"></div>
+
+                    <div class="control-group">
+                        <label for="animation-select">Animation</label>
+                        <div class="select-wrapper">
+                            <select id="animation-select">
+                                <option value="">None</option>
+                                <option value="reveal">Reveal</option>
+                                <option value="scroll">Scroll</option>
+                                <option value="rain">Rain</option>
+                                <option value="wave">Wave</option>
+                                <option value="explosion">Explosion</option>
+                            </select>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="animation-delay">Delay (ms)</label>
+                        <input 
+                            type="number" 
+                            id="animation-delay" 
+                            value="50" 
+                            min="10" 
+                            max="500"
+                        >
+                    </div>
+
+                    <div class="control-group actions-group">
+                        <label>&nbsp;</label>
+                        <button id="play-btn" class="play-btn" title="Play Animation">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <span>Play</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

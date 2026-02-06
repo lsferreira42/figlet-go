@@ -3,6 +3,7 @@ package main
 import (
 	"sync"
 	"syscall/js"
+	"time"
 
 	"github.com/lsferreira42/figlet-go/figlet"
 )
@@ -30,6 +31,8 @@ func loadFont(cfg *figlet.Config) error {
 	// Restore settings only if they were explicitly changed from defaults
 	if smushOverride != figlet.SMO_NO {
 		cfg.Smushmode = smushMode
+	}
+	if smushOverride != figlet.SMO_NO {
 		cfg.Smushoverride = smushOverride
 	}
 	if right2left != -1 {
@@ -432,6 +435,63 @@ func clearControlFiles(this js.Value, args []js.Value) interface{} {
 	}
 }
 
+// listAnimations returns available animations
+func listAnimations(this js.Value, args []js.Value) interface{} {
+	animations := figlet.ListAnimations()
+	jsAnims := make([]interface{}, len(animations))
+	for i, a := range animations {
+		jsAnims[i] = a
+	}
+	return map[string]interface{}{
+		"error":      nil,
+		"animations": jsAnims,
+	}
+}
+
+// generateAnimation generates frames for an animation
+func generateAnimation(this js.Value, args []js.Value) interface{} {
+	cfg, args := getConfig(args)
+	if len(args) < 1 {
+		return map[string]interface{}{
+			"error": "text argument required",
+		}
+	}
+
+	text := args[0].String()
+	animType := ""
+	if len(args) > 1 {
+		animType = args[1].String()
+	}
+
+	delayMs := 50
+	if len(args) > 2 {
+		delayMs = args[2].Int()
+	}
+
+	animator := figlet.NewAnimator(cfg)
+	frames, err := animator.GenerateAnimation(text, animType, time.Duration(delayMs)*time.Millisecond)
+	if err != nil {
+		return map[string]interface{}{
+			"error": err.Error(),
+		}
+	}
+
+	// Convert frames to JS-compatible structure
+	jsFrames := make([]interface{}, len(frames))
+	for i, f := range frames {
+		jsFrames[i] = map[string]interface{}{
+			"content":        f.Content,
+			"delay":          f.Delay.Milliseconds(),
+			"baselineOffset": f.BaselineOffset,
+		}
+	}
+
+	return map[string]interface{}{
+		"error":  nil,
+		"frames": jsFrames,
+	}
+}
+
 func main() {
 	// Register functions to be called from JavaScript
 	js.Global().Set("figlet", js.ValueOf(map[string]interface{}{
@@ -451,6 +511,8 @@ func main() {
 		"setDeutsch":        js.FuncOf(setDeutschFlag),
 		"addControlFile":    js.FuncOf(addControlFile),
 		"clearControlFiles": js.FuncOf(clearControlFiles),
+		"listAnimations":    js.FuncOf(listAnimations),
+		"generateAnimation": js.FuncOf(generateAnimation),
 	}))
 
 	// Signal that WASM is ready in browser environment

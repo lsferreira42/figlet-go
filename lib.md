@@ -13,6 +13,7 @@ This document provides a complete tutorial and API reference for using FIGlet-Go
   - [Colors and Output Formats](#colors-and-output-formats)
   - [Advanced Usage with Config](#advanced-usage-with-config)
   - [Listing Available Fonts](#listing-available-fonts)
+  - [Animations](#animations)
 - [API Reference](#api-reference)
   - [Functions](#functions)
   - [Types](#types)
@@ -399,6 +400,7 @@ cfg.ClearControlFiles()
 ```
 
 ### Listing Available Fonts
+  - [Animations](#animations)
 
 ```go
 fonts := figlet.ListFonts()
@@ -412,6 +414,71 @@ for _, font := range fonts {
 ```go
 fmt.Println("Version:", figlet.GetVersion())      // "2.2.5"
 fmt.Println("Version Int:", figlet.GetVersionInt()) // 20205
+```
+
+---
+
+### Animations
+
+FIGlet-Go supports several animation types that can be generated as a series of frames.
+
+#### Basic Animation Usage
+
+To use animations, you need to create an `Animator` and specify the animation type:
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+    "github.com/lsferreira42/figlet-go/figlet"
+)
+
+func main() {
+    cfg := figlet.New()
+    cfg.Fontname = "slant"
+    
+    // Create animator
+    animator := figlet.NewAnimator(cfg)
+    
+    // Generate animation frames
+    // delay: time between frames during playback
+    frames, err := animator.GenerateAnimation("GO!", "reveal", 50*time.Millisecond)
+    if err != nil {
+        panic(err)
+    }
+    
+    // Play the animation on stdout
+    figlet.PlayAnimation(frames)
+}
+```
+
+#### Available Animation Types
+
+| Type | Description |
+|------|-------------|
+| `reveal` | Reveals the text character by character from left to right. |
+| `scroll` | Scrolls the text from the right margin to its final position. |
+| `rain` | Characters "fall" into place from the top. |
+| `wave` | Applies a sinusoidal wave effect that settles over time. |
+| `explosion` | Text explodes into particles and then reforms perfectly. |
+
+#### Polished HTML Animations
+
+When using the FIGlet library with the `html` parser, `PlayAnimation` detects the format and generates a **standalone HTML animation player**. This player features a professional terminal aesthetic, optimized monospaced fonts, and a high-performance JavaScript engine for perfectly fluid playback.
+
+#### Stable Color Mapping
+
+All animations generated via the `Animator` support high-fidelity, character-pinned color mapping. This ensures that colors stay attached to the characters even as they move dynamically across the screen.
+
+#### Listing Available Animations
+
+```go
+animations := figlet.ListAnimations()
+for _, anim := range animations {
+    fmt.Println(anim)
+}
 ```
 
 ---

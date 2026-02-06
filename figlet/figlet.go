@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -123,6 +124,15 @@ type Config struct {
 	charPositionMap [][]int
 	// Current line being built (for charPositionMap)
 	currentLineIndex int
+	// Animation support
+	AnimationType  string
+	AnimationFile  string
+	AnimationDelay time.Duration
+	ExportFile     string
+	// DisableMappedColors disables character-based color mapping,
+	// using purely positional coloring instead. Useful for stable animations.
+	DisableMappedColors bool
+	PreserveMap         bool
 }
 
 // New creates a new Config with default values
@@ -965,7 +975,7 @@ func readcontrolfiles(cfg *Config) {
 func (cfg *Config) clearline() {
 	for i := 0; i < cfg.charheight; i++ {
 		cfg.outputline[i] = cfg.outputline[i][:0]
-		if cfg.charPositionMap != nil && i < len(cfg.charPositionMap) {
+		if !cfg.PreserveMap && cfg.charPositionMap != nil && i < len(cfg.charPositionMap) {
 			cfg.charPositionMap[i] = cfg.charPositionMap[i][:0]
 		}
 	}
@@ -1450,11 +1460,8 @@ func (cfg *Config) addchar(c rune) bool {
 		return false
 	}
 
-	// Track character position for color mapping (only for non-space characters)
-	trackChar := c != ' ' && c != '\n' && c != '\t'
-	if trackChar {
-		cfg.currentCharIndex++
-	}
+	// Track character position for color mapping
+	cfg.currentCharIndex++
 
 	for row := 0; row < cfg.charheight; row++ {
 		if cfg.Right2left == 1 {
@@ -1473,7 +1480,7 @@ func (cfg *Config) addchar(c rune) bool {
 			if smushamount < remaining {
 				cfg.outputline[row] = append(templine, cfg.outputline[row][smushamount:]...)
 				// Track character positions for Right2left
-				if trackChar && row < len(cfg.charPositionMap) {
+				if row < len(cfg.charPositionMap) {
 					charWidth := len(templine)
 					// Insert at the beginning for Right2left
 					newMap := make([]int, charWidth)
@@ -1491,7 +1498,7 @@ func (cfg *Config) addchar(c rune) bool {
 			} else {
 				cfg.outputline[row] = templine
 				// Track character positions for Right2left
-				if trackChar && row < len(cfg.charPositionMap) {
+				if row < len(cfg.charPositionMap) {
 					charWidth := len(templine)
 					newMap := make([]int, charWidth)
 					charIdx := cfg.currentCharIndex - 1
@@ -1516,7 +1523,7 @@ func (cfg *Config) addchar(c rune) bool {
 				if column < len(cfg.outputline[row]) && k < len(cfg.currchar[row]) {
 					cfg.outputline[row][column] = cfg.smushem(cfg.outputline[row][column], cfg.currchar[row][k])
 					// Update character position map for smushed positions
-					if trackChar && row < len(cfg.charPositionMap) && column < len(cfg.charPositionMap[row]) {
+					if row < len(cfg.charPositionMap) && column < len(cfg.charPositionMap[row]) {
 						// Keep the existing character index for smushed positions
 					}
 				}
@@ -1524,7 +1531,7 @@ func (cfg *Config) addchar(c rune) bool {
 			if smushamount < len(cfg.currchar[row]) {
 				cfg.outputline[row] = append(cfg.outputline[row], cfg.currchar[row][smushamount:]...)
 				// Track character positions for new columns
-				if trackChar && row < len(cfg.charPositionMap) {
+				if row < len(cfg.charPositionMap) {
 					charWidth := len(cfg.currchar[row]) - smushamount
 					for i := 0; i < charWidth; i++ {
 						cfg.charPositionMap[row] = append(cfg.charPositionMap[row], cfg.currentCharIndex-1)
@@ -1602,7 +1609,7 @@ func (cfg *Config) applyColorToChar(charStr string, position int) string {
 
 	// Get the input character index for this position
 	charIndex := -1
-	if cfg.charPositionMap != nil && cfg.currentLineIndex < len(cfg.charPositionMap) {
+	if !cfg.DisableMappedColors && cfg.charPositionMap != nil && cfg.currentLineIndex < len(cfg.charPositionMap) {
 		if position < len(cfg.charPositionMap[cfg.currentLineIndex]) {
 			charIndex = cfg.charPositionMap[cfg.currentLineIndex][position]
 		}
@@ -1626,6 +1633,25 @@ func (cfg *Config) applyColorToChar(charStr string, position int) string {
 	// Apply parser replacements
 	replaced := handleReplaces(charStr, cfg.OutputParser)
 
+	return prefix + replaced + suffix
+}
+
+// applyColorWithIndex applies color based on a specific character index
+func (cfg *Config) applyColorWithIndex(charStr string, charIndex int) string {
+	if len(cfg.Colors) == 0 {
+		return handleReplaces(charStr, cfg.OutputParser)
+	}
+	if charIndex < 0 {
+		return handleReplaces(charStr, cfg.OutputParser)
+	}
+	colorIndex := charIndex % len(cfg.Colors)
+	if colorIndex < 0 {
+		colorIndex = 0
+	}
+	color := cfg.Colors[colorIndex]
+	prefix := color.getPrefix(cfg.OutputParser)
+	suffix := color.getSuffix(cfg.OutputParser)
+	replaced := handleReplaces(charStr, cfg.OutputParser)
 	return prefix + replaced + suffix
 }
 
