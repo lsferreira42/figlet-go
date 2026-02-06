@@ -95,6 +95,7 @@ func getparams(cfg *figlet.Config) {
 	infoprint := -1
 	cfg.Cmdinput = false
 	cfg.Outputwidth = figlet.DEFAULTCOLUMNS
+	cfg.AnimationDelay = 50 * time.Millisecond
 
 	// Simple getopt implementation
 	optind := 1

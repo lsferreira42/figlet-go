@@ -138,7 +138,7 @@ func (a *Animator) generateReveal(rows []string, maps [][]int, delay time.Durati
 		var sb strings.Builder
 		for r, row := range rows {
 			rowMap := maps[r]
-			a.Config.currentLineIndex = r % a.Config.charheight
+			a.Config.currentLineIndex = r
 			runes := []rune(row)
 			if i < len(runes) {
 				a.appendStyledRange(&sb, row, rowMap, 0, i)
@@ -174,7 +174,7 @@ func (a *Animator) generateScroll(rows []string, maps [][]int, delay time.Durati
 		var sb strings.Builder
 		for r, row := range rows {
 			rowMap := maps[r]
-			a.Config.currentLineIndex = r % a.Config.charheight
+			a.Config.currentLineIndex = r
 			// Leading spaces (no mapping)
 			a.appendStyledRange(&sb, strings.Repeat(" ", i), nil, 0, i)
 
@@ -249,7 +249,7 @@ func (a *Animator) generateRain(rows []string, maps [][]int, delay time.Duration
 
 		var sb strings.Builder
 		for r, gridRow := range grid {
-			a.Config.currentLineIndex = r % a.Config.charheight
+			a.Config.currentLineIndex = r
 			rowStr := string(gridRow)
 			trimmedRow := strings.TrimRight(rowStr, " ")
 			runes := []rune(trimmedRow)
@@ -274,7 +274,7 @@ func (a *Animator) generateWave(rows []string, maps [][]int, delay time.Duration
 		for r := 0; r < len(rows); r++ {
 			row := rows[r]
 			rowMap := maps[r]
-			a.Config.currentLineIndex = r % a.Config.charheight
+			a.Config.currentLineIndex = r
 			runes := []rune(row)
 			shift := int(5.0 * dampening * math.Sin(phase+float64(r)*0.5))
 
@@ -303,7 +303,7 @@ func (a *Animator) generateExplosion(rows []string, maps [][]int, delay time.Dur
 	// Capture the initial static content and mappings for pauses
 	var staticSb strings.Builder
 	for r, row := range rows {
-		a.Config.currentLineIndex = r % a.Config.charheight
+		a.Config.currentLineIndex = r
 		a.appendStyledRange(&staticSb, row, maps[r], 0, len([]rune(row)))
 		staticSb.WriteString("\n")
 	}

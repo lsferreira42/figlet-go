@@ -133,6 +133,8 @@ type Config struct {
 	// using purely positional coloring instead. Useful for stable animations.
 	DisableMappedColors bool
 	PreserveMap         bool
+	// baseRowIndex tracks the starting row index of the current FIGlet line being rendered.
+	baseRowIndex int
 }
 
 // New creates a new Config with default values
@@ -319,10 +321,8 @@ func (cfg *Config) RenderString(text string) string {
 	cfg.agetmode = 0
 	cfg.currentCharIndex = 0
 	cfg.currentLineIndex = 0
-	cfg.charPositionMap = make([][]int, cfg.charheight)
-	for i := range cfg.charPositionMap {
-		cfg.charPositionMap[i] = make([]int, 0, 100)
-	}
+	cfg.baseRowIndex = 0
+	cfg.charPositionMap = make([][]int, 0)
 
 	// Write parser prefix if any
 	if cfg.OutputParser != nil && cfg.OutputParser.Prefix != "" {
@@ -1498,14 +1498,14 @@ func (cfg *Config) addchar(c rune) bool {
 			} else {
 				cfg.outputline[row] = templine
 				// Track character positions for Right2left
-				if row < len(cfg.charPositionMap) {
+				if cfg.baseRowIndex+row < len(cfg.charPositionMap) {
 					charWidth := len(templine)
 					newMap := make([]int, charWidth)
 					charIdx := cfg.currentCharIndex - 1
 					for i := range newMap {
 						newMap[i] = charIdx
 					}
-					cfg.charPositionMap[row] = newMap
+					cfg.charPositionMap[cfg.baseRowIndex+row] = newMap
 				}
 			}
 		} else {
@@ -1513,6 +1513,11 @@ func (cfg *Config) addchar(c rune) bool {
 			startCol := cfg.outlinelen - smushamount
 			if startCol < 0 {
 				startCol = 0
+			}
+
+			// Ensure charPositionMap has enough rows
+			for len(cfg.charPositionMap) < cfg.baseRowIndex+cfg.charheight {
+				cfg.charPositionMap = append(cfg.charPositionMap, make([]int, 0, 100))
 			}
 
 			for k := 0; k < smushamount; k++ {
@@ -1523,7 +1528,7 @@ func (cfg *Config) addchar(c rune) bool {
 				if column < len(cfg.outputline[row]) && k < len(cfg.currchar[row]) {
 					cfg.outputline[row][column] = cfg.smushem(cfg.outputline[row][column], cfg.currchar[row][k])
 					// Update character position map for smushed positions
-					if row < len(cfg.charPositionMap) && column < len(cfg.charPositionMap[row]) {
+					if cfg.baseRowIndex+row < len(cfg.charPositionMap) && column < len(cfg.charPositionMap[cfg.baseRowIndex+row]) {
 						// Keep the existing character index for smushed positions
 					}
 				}
@@ -1531,10 +1536,10 @@ func (cfg *Config) addchar(c rune) bool {
 			if smushamount < len(cfg.currchar[row]) {
 				cfg.outputline[row] = append(cfg.outputline[row], cfg.currchar[row][smushamount:]...)
 				// Track character positions for new columns
-				if row < len(cfg.charPositionMap) {
+				if cfg.baseRowIndex+row < len(cfg.charPositionMap) {
 					charWidth := len(cfg.currchar[row]) - smushamount
 					for i := 0; i < charWidth; i++ {
-						cfg.charPositionMap[row] = append(cfg.charPositionMap[row], cfg.currentCharIndex-1)
+						cfg.charPositionMap[cfg.baseRowIndex+row] = append(cfg.charPositionMap[cfg.baseRowIndex+row], cfg.currentCharIndex-1)
 					}
 				}
 			}
@@ -1656,10 +1661,11 @@ func (cfg *Config) applyColorWithIndex(charStr string, charIndex int) string {
 }
 
 func (cfg *Config) printline() {
-	cfg.currentLineIndex = 0
+	cfg.currentLineIndex = cfg.baseRowIndex
 	for i := 0; i < cfg.charheight; i++ {
 		cfg.putstring(cfg.outputline[i])
 	}
+	cfg.baseRowIndex += cfg.charheight
 	cfg.clearline()
 }
 
